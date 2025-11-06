@@ -79,6 +79,7 @@ body {
   /* 기본 레이아웃 설정 */
   display: flex;
   place-items: center;
+  width: 100vw;
   min-width: 320px;
   min-height: 100vh;
 }
