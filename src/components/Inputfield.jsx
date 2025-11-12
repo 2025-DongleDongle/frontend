@@ -3,9 +3,9 @@ import styled from "styled-components";
 
 const Inputfield = ({
   type = "text", // input 타입 (text, password, email 등 : password 쓰면 마스킹?처리되어 보암!)
-  placeholder = "입력하세요", 
-  value, 
-  onChange, 
+  placeholder = "입력하세요",
+  value,// 현재 입력된 값
+  onChange,// 값 변경하면 실행될 것!
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -15,13 +15,13 @@ const Inputfield = ({
   return (
     <InputWrapper>
       <StyledInput
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        $isFocused={isFocused}
+        type={type} 
+        placeholder={placeholder} 
+        value={value} 
+        onChange={onChange} 
+        onFocus={handleFocus} // input 클릭(포커스) 시 실행
+        onBlur={handleBlur} // input 벗어날 때(포커스 해제) 실행
+        $isFocused={isFocused} // 포커스 상태 전달 styled-components에 전달
       />
     </InputWrapper>
   );
