@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import SquareButton from "../components/button/SquareButton";
 
-const siginupCompleteButtonStyle = {
+const signupCompleteButtonStyle = {
   width: "13rem",
   height: "3.25rem",
   backgroundColor: "var(--black)",
@@ -23,7 +23,7 @@ const SignupCompletePage = () => {
       <h3>회원가입이 완료되었습니다!</h3>
       <SquareButton
         onClick={() => navigate('/login')}
-        style={siginupCompleteButtonStyle}
+        style={signupCompleteButtonStyle}
       >
         로그인하러 가기
       </SquareButton>
