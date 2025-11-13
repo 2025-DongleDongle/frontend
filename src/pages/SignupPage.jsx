@@ -126,6 +126,12 @@ const SignupPage = () => {
   const [type, setType] = useState(""); // 선택된 파견유형
   const [typeError, setTypeError] = useState(""); // 파견유형 에러 메시지
 
+  const [time, setTime] = useState(""); // 선택된 파견시기
+  const [timeError, setTimeError] = useState(""); // 파견시기 에러 메시지
+
+  const [period, setPeriod] = useState(""); // 선택된 파견기간
+  const [periodError, setPeriodError] = useState(""); // 파견기간 에러 메시지
+
   // 각 인풋필드에 대한 ref 생성 (13개 필드)
   const inputRefs = Array.from({length: 13}, () => useRef(null));
   
@@ -197,6 +203,18 @@ const SignupPage = () => {
       setTypeError("* 파견 유형을 선택하세요");
       hasError = true;
     }
+
+    // 파견시기 입력여부 검증
+    if (time.length < 1) {
+      setTimeError("* 파견 시기를 입력하세요");
+      hasError = true;
+    }
+
+    // 파견기간 입력여부 검증
+    if (period.length < 1) {
+      setPeriodError("* 파견 기간를 입력하세요");
+      hasError = true;
+    }
     
     // 에러가 있으면 로그인 실행하지 않음
     if (hasError) {
@@ -224,6 +242,8 @@ const SignupPage = () => {
   const handlePasswordChange = createInputHandler(setPassword, setPasswordError);
   const handlePasswordCheckChange = createInputHandler(setPasswordCheck, setPasswordCheckError);
   const handleNicknameChange = createInputHandler(setNickname, setNicknameError);
+  const handleTimeChange = createInputHandler(setTime, setTimeError);
+  const handlePeriodChange = createInputHandler(setPeriod, setPeriodError);
   
   const handleGenderSelect = createSelectHandler(setGender, setGenderError);
   const handleUnivSelect = createSelectHandler(setSelectedUniv, setUnivError);
@@ -378,6 +398,34 @@ const SignupPage = () => {
           />
           <ErrorMessage>
             {typeError || " "}
+          </ErrorMessage>
+        </Input>
+        <Input>
+          <a>파견 시기</a>
+          <Inputfield
+            ref={inputRefs[10]}
+            placeholder="예: 2024년 2학기"
+            value={time}
+            onChange={handleTimeChange}
+            customStyle={timeError ? errorInputStyle : signupInputStyle}
+            onKeyDown={(e) => handleKeyDown(e, 10)}
+          />
+          <ErrorMessage>
+            {timeError || " "}
+          </ErrorMessage>
+        </Input>
+        <Input>
+          <a>파견 기간</a>
+          <Inputfield
+            ref={inputRefs[11]}
+            placeholder="예: 3개월"
+            value={period}
+            onChange={handlePeriodChange}
+            customStyle={periodError ? errorInputStyle : signupInputStyle}
+            onKeyDown={(e) => handleKeyDown(e, 11)}
+          />
+          <ErrorMessage>
+            {periodError || " "}
           </ErrorMessage>
         </Input>
       </Container>
