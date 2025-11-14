@@ -112,7 +112,7 @@ button {
 
 /* —————————————————————————— Headings —————————————————————————— */
 
-.h1 {
+h1 {
   font-family: var(--heading-font-family);
   font-weight: var(--fw-bold);
   font-size: var(--fs-h1);
@@ -120,7 +120,7 @@ button {
   color: var(--text-primary, var(--color-black));
 }
 
-.h2 {
+h2 {
   font-family: var(--heading-font-family);
   font-weight: var(--fw-bold);
   font-size: var(--fs-h2);
@@ -128,7 +128,7 @@ button {
   color: var(--text-primary, var(--color-black));
 }
 
-.h3 {
+h3 {
   font-family: var(--heading-font-family);
   font-weight: var(--fw-bold);
   font-size: var(--fs-h3);
@@ -137,7 +137,7 @@ button {
   color: var(--text-primary, var(--color-black));
 }
 
-.h4 {
+h4 {
   font-family: var(--heading-font-family);
   font-weight: var(--fw-bold);
   font-size: var(--fs-h4);
@@ -145,7 +145,7 @@ button {
   color: var(--text-primary, var(--color-black));
 }
 
-.h5 {
+h5 {
   font-family: var(--heading-font-family);
   font-weight: var(--fw-bold);
   font-size: var(--fs-h5);
