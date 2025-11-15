@@ -24,17 +24,6 @@ CSS Reset/Normalize: body, html, button 등 기본 HTML 요소들의 스타일 �
   --fw-md: 500;
   --fw-bold: 700;
 
-  /* ————————————————— base sizes  ————————————————— */
-  --fs-h1: 4.25rem;
-  --fs-h2: 3.5rem;
-  --fs-h3: 2.88rem;
-  --fs-h4: 1.75rem;
-  --fs-h5: 1.5rem;
-
-  --fs-body1: 1.12rem;
-  --fs-body2: 1rem;
-  --fs-body3: 0.88rem;
-
   /* ————————————————— line-height  ————————————————— */
   --lh-default: 1.5;
 
@@ -112,43 +101,26 @@ button {
 
 /* —————————————————————————— Headings —————————————————————————— */
 
-.h1 {
+h1 {
   font-family: var(--heading-font-family);
   font-weight: var(--fw-bold);
-  font-size: var(--fs-h1);
+  font-size: 2.15625rem;
   line-height: var(--lh-default);
   color: var(--text-primary, var(--color-black));
 }
 
-.h2 {
+h2 {
   font-family: var(--heading-font-family);
   font-weight: var(--fw-bold);
-  font-size: var(--fs-h2);
+  font-size: 1.3125rem;
   line-height: var(--lh-default);
   color: var(--text-primary, var(--color-black));
 }
 
-.h3 {
+h3 {
   font-family: var(--heading-font-family);
   font-weight: var(--fw-bold);
-  font-size: var(--fs-h3);
-  line-height: var(--lh-default);
-  margin: 0 0 0.5em 0;
-  color: var(--text-primary, var(--color-black));
-}
-
-.h4 {
-  font-family: var(--heading-font-family);
-  font-weight: var(--fw-bold);
-  font-size: var(--fs-h4);
-  line-height: var(--lh-default);
-  color: var(--text-primary, var(--color-black));
-}
-
-.h5 {
-  font-family: var(--heading-font-family);
-  font-weight: var(--fw-bold);
-  font-size: var(--fs-h5);
+  font-size: 1.125rem;
   line-height: var(--lh-default);
   color: var(--text-primary, var(--color-black));
 }
@@ -158,58 +130,41 @@ button {
 .body1 {
   font-family: var(--body-font-family);
   font-weight: var(--fw-md);
-  font-size: var(--fs-body1);
+  font-size: 0.925rem;
   line-height: var(--lh-default);
-  color: var(--text-primary, var(--color-black));
+  color: var(--color-black);
 }
 
 .body2 {
   font-family: var(--body-font-family);
   font-weight: var(--fw-df);
-  font-size: var(--fs-body2);
+  font-size: 0.75rem;
   line-height: var(--lh-default);
-  color: var(--text-primary, var(--color-black));
+  color: var(--color-black);
 }
 
 .body3 {
   font-family: var(--body-font-family);
   font-weight: var(--fw-df);
-  font-size: var(--fs-body3);
+  font-size: 0.65625rem;
   line-height: var(--lh-default);
-  color: var(--text-secondary, var(--color-gray));
+  color: var(--color-gray);
 }
 
-/*
- ———————————————————————————————————————————————————————————————————— 
- */
+/* —————————————————————————— etc styles —————————————————————————— */
 
-/* 다크모드: 브라우저 설정 따라 */
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #242424;
-  }
-  body {
-    color: rgba(255, 255, 255, 0.87);
-  }
-  button {
-    background-color: #1a1a1a;
-  }
+.page {
+  font-family: var(--body-font-family);
+  font-weight: var(--fw-bold);
+  font-size: 1.75rem;
+  line-height: var(--lh-default);
+  color: var(--color-gray);
 }
 
-/* 라이트모드: 브라우저 설정 따라가ㅏ게 */
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  body {
-    color: var(--black, #000);
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.bar {
+  font-family: var(--body-font-family);
+  font-weight: var(--fw-md);
+  font-size: 1.125rem;
+  line-height: var(--lh-default);
+  color: var(--color-gray);
 }
