@@ -15,7 +15,7 @@ const Button = ({
         disabled={disabled}
         style={style}
         >
-        {children}
+          <h2>{children}</h2>
         </StyledButton>
     );
 }
@@ -27,8 +27,8 @@ const StyledButton = styled.button`
     justify-content: center;
     align-items: center;
 
-    height: 4.375rem;
-    width: 35rem;
+    height: 3.86rem;
+    width: 30.88rem;
 
     border-radius: 0.9375rem;
     background: var(--blue, #115BCA);
