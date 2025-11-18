@@ -13,6 +13,9 @@ import SignupCompletePage from "./pages/SignupCompletePage";
 import ProfilePage from "./pages/ProfilePage";
 //Scrapbook
 import ScrapbookPage from "./pages/ScrapbookPage";
+//Accountbook
+//AcctSummary
+import AcctSummaryLoading from "./pages/AcctSummaryLoading";
 
 function App() {
 
@@ -41,6 +44,7 @@ function App() {
           <Route path="/login" element={<LoginPage/>}/>
           <Route path="/signup" element={<SignupPage/>}/>
           <Route path="/signup/complete" element={<SignupCompletePage/>}/>
+          <Route path="/summary/loading" element={<AcctSummaryLoading/>}/>
         </Routes>
       </Router>
     </>
