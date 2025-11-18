@@ -1,18 +1,34 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 import Spinner from "../components/Spinner";
+import BackTopbar from "../components/topbar/BackTopbar";
 
 const AcctSummaryLoading = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // 2초 후 세부 프로필 입력 페이지로 이동
+    const timer = setTimeout(() => {
+      navigate("/summary/upload");
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [navigate]);
+
   return (
-    <Wrapper>
-      <ContentContainer>
-        <Spinner />
-        <TextContainer>
-          <MainText>요약본을 열심히 생성하고 있어요.</MainText>
-          <SubText>잠시만 기다려주세요. 약 ~분이 소요됩니다.</SubText>
-        </TextContainer>
-      </ContentContainer>
-    </Wrapper>
+    <>
+      <BackTopbar />
+      <Wrapper>
+        <ContentContainer>
+          <Spinner />
+          <TextContainer>
+            <MainText>요약본을 열심히 생성하고 있어요.</MainText>
+            <SubText>잠시만 기다려주세요. 약 ~분이 소요됩니다.</SubText>
+          </TextContainer>
+        </ContentContainer>
+      </Wrapper>
+    </>
   );
 };
 
