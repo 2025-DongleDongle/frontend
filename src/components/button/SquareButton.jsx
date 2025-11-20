@@ -1,24 +1,22 @@
 import React from "react";
 import styled from "styled-components";
 
-
-const Button = ({ 
-  children,       // 버튼 안의 내용
-  onClick,        // 클릭 시 실행할 함수
+const Button = ({
+  children, // 버튼 안의 내용
+  onClick, // 클릭 시 실행할 함수
   disabled = false, // 비활성화 여부
-  customStyle,      // 인라인 스타일 오버라이드
+  customStyle, // 인라인 스타일 오버라이드
 }) => {
-    
-    return (
-        <StyledButton
-        onClick={onClick}
-        disabled={disabled}
-        $customStyle={customStyle} // 커스텀 스타일 전달
-        >
-          <h2>{children}</h2>
-        </StyledButton>
-    );
-}
+  return (
+    <StyledButton
+      onClick={onClick}
+      disabled={disabled}
+      $customStyle={customStyle} // 커스텀 스타일 전달
+    >
+      <h2>{children}</h2>
+    </StyledButton>
+  );
+};
 
 export default Button;
 
@@ -56,4 +54,11 @@ const StyledButton = styled.button`
 
     /* 커스텀 스타일 적용 */
     ${({ $customStyle }) => $customStyle && $customStyle}
+    
+    h2 {
+      font-size: inherit;
+      font-weight: inherit;
+      color: inherit;
+      margin: 0;
+    }
 `;
