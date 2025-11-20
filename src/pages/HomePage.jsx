@@ -231,9 +231,13 @@ const Profile = styled.div`
   justify-content: flex-start;
 
   h2 {
-      width: 100%;
-      text-align: left;
-      margin-bottom: 0.69rem;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 0.69rem;
+  }
+
+  h3,p{
+    white-space: nowrap;
   }
 `
 
