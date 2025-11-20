@@ -21,41 +21,44 @@ const Button = ({
 export default Button;
 
 const StyledButton = styled.button`
-  display: flex;
-  justify-content: center;
-  align-items: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-  height: 3.86rem;
-  width: 30.88rem;
+    height: 3.86rem;
+    width: 30.88rem;
 
-  border-radius: 0.827rem;
-  background: var(--blue, #115bca);
+    white-space: nowrap;
 
-  color: var(--white, #fff);
-  font-size: 1.75rem;
-  font-weight: 700;
+    border-radius: 0.827rem;
+    background: var(--blue, #115BCA);
 
-  &:hover {
-    cursor: pointer;
-    filter: brightness(0.9);
-  }
+    color: var(--white, #fff);
+    font-size: 1.75rem;
+    font-weight: 700;
 
-  &:focus {
-    outline: 1px solid var(--blue, #115bca);
-    outline-offset: 2px;
-  }
+    &:hover {
+        cursor: pointer;
+        filter: brightness(0.9);
+    }
 
-  &:disabled {
-    background: var(--gray, #a5a5a5);
-    cursor: not-allowed;
-  }
+    &:focus {
+        outline: 1px solid var(--blue, #115BCA);
+        outline-offset: 2px;
+    }
 
-  /* 커스텀 스타일 적용 */
-  ${({ $customStyle }) => $customStyle && $customStyle}
-  h2 {
-    font-size: inherit;
-    font-weight: inherit;
-    color: inherit;
-    margin: 0;
-  }
+    &:disabled {
+        background: var(--gray, #A5A5A5);
+        cursor: not-allowed;
+    }
+
+    /* 커스텀 스타일 적용 */
+    ${({ $customStyle }) => $customStyle && $customStyle}
+    
+    h2 {
+      font-size: inherit;
+      font-weight: inherit;
+      color: inherit;
+      margin: 0;
+    }
 `;

@@ -110,7 +110,7 @@ const Wrapper = styled.div`
   grid-template-columns: 1.9fr 1fr;
   gap: 2.68rem;
 
-  padding: 0 3.94rem 0 2.94rem;
+  padding: 0 5.44rem 0 4.44rem;
 `
 
 const Left = styled.div`
@@ -231,9 +231,13 @@ const Profile = styled.div`
   justify-content: flex-start;
 
   h2 {
-      width: 100%;
-      text-align: left;
-      margin-bottom: 0.69rem;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 0.69rem;
+  }
+
+  h3,p{
+    white-space: nowrap;
   }
 `
 

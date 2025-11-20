@@ -199,6 +199,10 @@ const CostSection = styled.div`
   justify-content: center;
   align-items: flex-start;
   gap: 0.3rem;
+
+  h3{
+    white-space: nowrap;
+  }
 `;
 
 const CostText = styled.div`

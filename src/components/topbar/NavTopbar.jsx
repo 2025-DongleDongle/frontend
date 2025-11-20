@@ -48,7 +48,8 @@ const Wrapper = styled.div`
 
     position: fixed; 
     top: 0;
-    left: 0;  
+    left: 0;
+    z-index: 1000;
 
     display: flex;
     justify-content: space-between;
@@ -68,6 +69,8 @@ const Button = styled.button`
     background-color: transparent;
     border: none;
     padding: 0;
+
+    white-space: nowrap;
 
     transition: color 0.2s ease;
 
