@@ -3,10 +3,7 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import SquareButton from "../components/button/SquareButton";
 import Inputfield from "../components/Inputfield";
-
-const onClick = () => {
-
-}
+import { AuthAPI } from "@/apis";
 
 // 로그인 페이지용 인풋 스타일
 const loginInputStyle = {
@@ -37,6 +34,75 @@ const LoginPage = () => {
   const usernameRef = useRef(null);
   const passwordRef = useRef(null);
 
+  // 🔥 로그인 API 실행
+  const runLogin = async () => {
+    try {
+      const loginData = {
+        username: id,
+        password: password,
+        remember: isChecked,
+      };
+      const res = await AuthAPI.login(loginData);
+
+      // 토큰 저장
+      localStorage.setItem("token", res.data.access_token);
+
+      navigate("/");
+
+    } catch (err) {
+      
+      const errorData = err?.error || {};
+
+      // 전체 에러 초기화
+      setIdError("");
+      setPasswordError("");
+
+      // 1) username 에러
+      if (errorData.username) {
+        setIdError(errorData.username[0]);
+        return;
+      }
+
+      // 2) password 에러
+      if (errorData.password) {
+        setPasswordError(errorData.password[0]);
+        return;
+      }
+
+      // 3) non_field_errors 처리
+      if (errorData.non_field_errors) {
+        const msg = errorData.non_field_errors[0];
+
+        // (1) 가입되지 않은 사용자 → 아이디 밑에 표시
+        if (msg.includes("가입되지 않은")) {
+          setIdError(msg);
+          return;
+        }
+
+        // (2) 잘못된 비밀번호 → 비밀번호 밑에 표시
+        if (msg.includes("비밀번호")) {
+          setPasswordError(msg);
+          return;
+        }
+
+        // (3) 예외적인 메시지 → 팝업으로 표시
+        alert(msg);
+        return;
+      }
+
+      // 4) 서버 에러 (500)
+      if (err.response && err.response.status === 500) {
+        alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+
+      // 5) 진짜 예상 못한 구조 → 전체 팝업
+      console.log("에러 메시지:", err?.message);
+      console.log("에러 구조:", JSON.stringify(err, null, 2));
+      alert(err?.message || "알 수 없는 오류가 발생했습니다.");
+    }
+  };
+
   // 로그인 버튼 클릭 핸들러
   const handleLogin = () => {
     let hasError = false;
@@ -59,7 +125,7 @@ const LoginPage = () => {
     }
     
     // 검증 통과 시 기존 로그인 로직 실행
-    onClick();
+    runLogin();
   };
 
   const handleCheckboxChange = () => {

@@ -1,11 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
+import { AuthAPI } from "@/apis";
 
 
 const LoginCircleButton = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const onClick = () => {
-        setIsLoggedIn((prev) => !prev); // 상태 반전 (true ↔ false)
+    const navigate = useNavigate();
+    const [isLoggedIn, setIsLoggedIn] = useState(() => {
+        // localStorage에 토큰이 있으면 로그인 상태로 초기화
+        return !!localStorage.getItem("token");
+    });
+
+    // 컴포넌트 마운트 시 로그인 상태 확인
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        setIsLoggedIn(!!token);
+    }, []);
+    
+    const onClick = async () => {
+        if (!isLoggedIn) {
+            // 로그인 상태가 아니면 로그인 페이지로 이동
+            navigate('/login');
+        } else {
+            // 로그아웃 API 호출
+            try {
+                await AuthAPI.logout();
+                // 로컬 스토리지에서 토큰 제거
+                localStorage.removeItem("token");
+                localStorage.removeItem("userId");
+                localStorage.removeItem("username");
+                // 로그아웃 상태로 변경
+                setIsLoggedIn(false);
+            } catch (error) {
+                console.error("로그아웃 실패:", error);
+                // 에러가 발생해도 로컬 상태는 정리
+                localStorage.removeItem("token");
+                localStorage.removeItem("userId");
+                localStorage.removeItem("username");
+                setIsLoggedIn(false);
+            }
+        }
     };
     
     return (
