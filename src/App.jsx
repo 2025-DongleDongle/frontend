@@ -23,8 +23,8 @@ import ScrapbookPage from "./pages/ScrapbookPage";
 import AccountbookPage from "./pages/AccountbookPage";
 //AcctSummary
 import AcctSummaryLoading from "./pages/AcctSummaryLoading";
+import AcctSummaryComplete from "./pages/AcctSummaryComplete";
 // import AcctSummaryProfileData from "./pages/AcctSummaryProfileData";
-// import AcctSummaryComplete from "./pages/AcctSummaryComplete";
 // import AcctSummaryPage from "./pages/AcctSummaryPage";
 
 function App() {
@@ -55,10 +55,10 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
 
           {/* 가계부 요약본 */}
-          {/* <Route path="/summaries/loading" element={<AcctSummaryLoading />} />
-          <Route path="/summaries/profile" element={<AcctSummaryProfileData/>}/>
+          <Route path="/summaries/loading" element={<AcctSummaryLoading />} />
           <Route path="/summaries/complete" element={<AcctSummaryComplete />} />
-          <Route path="/summaries/snapshot" element={<AcctSummaryPage />} />*/}
+          {/* <Route path="/summaries/snapshot" element={<AcctSummaryPage />} />
+              <Route path="/summaries/profile" element={<AcctSummaryProfileData/>}/>*/}
         </Routes>
       </Router>
     </>
