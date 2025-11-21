@@ -23,7 +23,7 @@ const SignupCompletePage = () => {
         onClick={() => navigate('/login')}
         customStyle={signupCompleteButtonStyle}
       >
-        <h3>로그인하러 가기</h3>
+        <span className="h3">로그인하러 가기</span>
       </SquareButton>
     </Wrapper>
   );
