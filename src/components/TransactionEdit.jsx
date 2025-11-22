@@ -261,7 +261,7 @@ const TransactionEdit = forwardRef(
               color: var(--white);
             `}
             >
-              <span style={{ color: "var(--white)" }}>등록하기</span>
+              <span className="h2">등록하기</span>
             </Button>
           </RegisterButtonContainer>
         )}

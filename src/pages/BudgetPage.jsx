@@ -272,7 +272,9 @@ const BudgetPage = () => {
           </clipPath>
         </defs>
       </svg>
-      <SquareButton>저장하기</SquareButton>
+      <SquareButton>
+        <span className="h2">저장하기</span>
+      </SquareButton>
       <Bottom>
         <Center>
           <h3 className="dblue title">총 예상 비용</h3>

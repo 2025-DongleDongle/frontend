@@ -396,7 +396,7 @@ const AccountbookPage = () => {
                         font-weight: 500;
                       `}
                     >
-                      삭제하기
+                      <span className="h3">삭제하기</span>
                     </Button>
                     <Button
                       onClick={() => editFormRef.current?.handleSave()}
@@ -410,9 +410,7 @@ const AccountbookPage = () => {
                         font-weight: 500;
                       `}
                     >
-                      <span style={{ color: "var(--white)" }}>
-                        수정사항 저장하기
-                      </span>
+                      <span className="h3">수정사항 저장하기</span>
                     </Button>
                   </ModalButtonContainer>
                 </ModalContent>
@@ -613,7 +611,7 @@ const AccountbookPage = () => {
               };
             `}
               >
-                내 가계부 요약본 게시하기
+                <span className="h3">내 가계부 요약본 게시하기</span>
               </Button>
 
               <Button
@@ -628,7 +626,7 @@ const AccountbookPage = () => {
               background: ${isSummaryPublished ? "var(--blue)" : "var(--gray)"};
             `}
               >
-                내 게시글 바로가기
+                <span className="h3">내 게시글 바로가기</span>
               </Button>
             </ButtonGroup>
           </Sidebar>
