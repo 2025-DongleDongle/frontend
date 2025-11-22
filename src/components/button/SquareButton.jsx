@@ -13,7 +13,7 @@ const Button = ({
       disabled={disabled}
       $customStyle={customStyle} // 커스텀 스타일 전달
     >
-      <h2>{children}</h2>
+      {children}
     </StyledButton>
   );
 };
@@ -34,8 +34,6 @@ const StyledButton = styled.button`
     background: var(--blue, #115BCA);
 
     color: var(--white, #fff);
-    font-size: 1.75rem;
-    font-weight: 700;
 
     &:hover {
         cursor: pointer;
