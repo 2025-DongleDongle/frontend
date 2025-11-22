@@ -2,16 +2,34 @@ import React from "react";
 import styled from "styled-components";
 import { useNavigate, useLocation, useMatch } from 'react-router-dom';
 import LoginCircleButton from "../button/LoginCircleButton"
+import Modal from "../Modal";
 
 const NavTopbar = () =>{
     const navigate = useNavigate();
-    const { pathname } = useLocation();
-
+    const [showModal, setShowModal] = React.useState(false);
     // 현재 경로랑 버튼의 route가 같으면 active 상태 (추후 수정 필요)
     const homeActive          = !!useMatch('/home');
     const budgetActive        = !!useMatch('/budget/*'); 
     const accountbookActive   = !!useMatch('/accountbook/*');
     const scrapbookActive     = !!useMatch('/scrapbook/*');
+    const isLoggedIn = !!localStorage.getItem("token");
+
+    // 버튼 클릭 핸들러: 로그인 안했으면 모달, 했으면 이동
+    const handleNavClick = (route) => {
+        if (isLoggedIn) {
+            navigate(route);
+        } else {
+            setShowModal(true);
+        }
+    };
+
+    const handleModalAction = () => {
+        setShowModal(false);
+        navigate('/login');
+    };
+    const handleCloseModal = () => {
+        setShowModal(false);
+    };
 
     return(
         <>
@@ -19,22 +37,32 @@ const NavTopbar = () =>{
                 <img src="/icons/Logo.svg" alt="로고" style={{width: "9rem"}}/>
 
                 <NavContainer>
-                    <Button onClick={() => navigate('/home')} $active={homeActive}>
+                    <Button onClick={() => handleNavClick('/home')} $active={homeActive}>
                         홈
                     </Button>
-                    <Button onClick={() => navigate('/budget')} $active={budgetActive}>
+                    <Button onClick={() => handleNavClick('/budget')} $active={budgetActive}>
                         예산안
                     </Button>
-                    <Button onClick={() => navigate('/accountbook')} $active={accountbookActive}>
+                    <Button onClick={() => handleNavClick('/accountbook')} $active={accountbookActive}>
                         가계부
                     </Button>
-                    <Button onClick={() => navigate('/scrapbook')} $active={scrapbookActive}>
+                    <Button onClick={() => handleNavClick('/scrapbook')} $active={scrapbookActive}>
                         스크랩북
                     </Button>
                 </NavContainer>
 
                 <LoginCircleButton></LoginCircleButton>
             </Wrapper>
+            {showModal && (
+                <Modal
+                    isOpen={showModal}
+                    content="로그인이 필요한 기능입니다."
+                    cancelText="닫기"
+                    actionText="로그인하러 가기"
+                    onClose={handleCloseModal}
+                    onAction={handleModalAction}
+                />
+            )}
         </>
     );
 }
