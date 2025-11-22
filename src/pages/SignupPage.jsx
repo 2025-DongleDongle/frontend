@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import SquareButton from "../components/button/SquareButton";
@@ -6,6 +6,7 @@ import CircleButton from "../components/button/CircleButton";
 import Inputfield from "../components/Inputfield";
 import SearchDropdown from "../components/SearchDropdown";
 import Dropdown from "../components/Dropdown";
+import { SignupAPI, CountriesAPI, UniversitiesAPI, ExchangeUniversitiesAPI } from "@/apis";
 
 // 회원가입 페이지용 인풋 스타일
 const signupInputStyle = {
@@ -55,48 +56,14 @@ const errorButtonStyle = {
   borderColor: "var(--red)"
 }
 
-//본교 목록
-const univList = [
-  { label: "가천대학교", value: "가천대학교" },
-  { label: "가톨릭대학교", value: "가톨릭대학교" },
-  { label: "건국대학교", value: "건국대학교" },
-  { label: "경희대학교", value: "경희대학교" },
-  { label: "고려대학교", value: "고려대학교" },
-  { label: "국민대학교", value: "국민대학교" },
-  { label: "단국대학교", value: "단국대학교" },
-  { label: "동국대학교", value: "동국대학교" },
-  { label: "동덕여자대학교", value: "동덕여자대학교" },
-  { label: "명지대학교", value: "명지대학교" },
-  { label: "삼육대학교", value: "삼육대학교" },
-  { label: "서강대학교", value: "서강대학교" },
-  { label: "서울대학교", value: "서울대학교" },
-  { label: "서울시립대학교", value: "서울시립대학교" },
-  { label: "성균관대학교", value: "성균관대학교" },
-  { label: "숙명여자대학교", value: "숙명여자대학교" },
-  { label: "숭실대학교", value: "숭실대학교" },
-  { label: "연세대학교", value: "연세대학교" },
-  { label: "이화여자대학교", value: "이화여자대학교" },
-  { label: "중앙대학교", value: "중앙대학교" },
-  { label: "한국외국어대학교", value: "한국외국어대학교" },
-  { label: "한성대학교", value: "한성대학교" },
-  { label: "한양대학교", value: "한양대학교" },
-  { label: "홍익대학교", value: "홍익대학교" }
-];
-
 const typeList = [
     { label: "교환학생", value: "교환학생" },
     { label: "방문학생", value: "방문학생" },
-    { label: "기타", value: "교환" },
+    { label: "기타", value: "기타" },
 ]
 
 const SignupPage = () => {
   const navigate = useNavigate();
-
-  const onClick = () => {
-    // 회원가입 로직 추가 예정
-    console.log("회원가입");
-    navigate("/signup/complete");
-}
 
   const [id, setId] = useState(""); // 아이디 값
   const [idError, setIdError] = useState(""); // 아이디 에러 메시지
@@ -130,6 +97,124 @@ const SignupPage = () => {
 
   const [period, setPeriod] = useState(""); // 선택된 파견기간
   const [periodError, setPeriodError] = useState(""); // 파견기간 에러 메시지
+
+  // API에서 목록들 불러오기
+  const [univList, setUnivList] = useState([]);
+  const [countryList, setCountryList] = useState([]);
+  const [exUnivList, setExUnivList] = useState([]);
+  const [allExUnivs, setAllExUnivs] = useState([]); // 전체 파견학교 목록 저장
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // 본교 목록
+        const univRes = await UniversitiesAPI.universities();
+        const formattedUnivs = univRes.data
+          .filter(univ => univ.univ_name && univ.univ_name.length > 2) // 이상한 데이터 필터링
+          .map(univ => ({
+            label: univ.univ_name,
+            value: univ.id
+          }));
+        setUnivList(formattedUnivs);
+
+        // 파견 국가 목록
+        const countryRes = await CountriesAPI.countries();
+        const formattedCountries = countryRes.data.map(country => ({
+          label: country.label,
+          value: country.code
+        }));
+        setCountryList(formattedCountries);
+
+        // 파견 학교 목록 (전체 저장)
+        const exUnivRes = await ExchangeUniversitiesAPI.exUniversities();
+        setAllExUnivs(exUnivRes.data); // 원본 데이터 저장
+        
+        // 초기에는 전체 파견학교 목록 표시
+        const formattedExUnivs = exUnivRes.data.map(univ => ({
+          label: univ.univ_name,
+          value: univ.id
+        }));
+        setExUnivList(formattedExUnivs);
+      } catch(err) {
+        console.error("목록 불러오기 실패:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // 선택된 국가에 따라 파견학교 목록 필터링
+  useEffect(() => {
+    if (country) {
+      const countryCode = country.value || country; // country가 객체면 value 사용
+      const filteredUnivs = allExUnivs
+        .filter(univ => univ.country === countryCode)
+        .map(univ => ({
+          label: univ.univ_name,
+          value: univ.id
+        }));
+      setExUnivList(filteredUnivs);
+    } else {
+      // 국가 선택 안한 경우 전체 목록 표시
+      const formattedExUnivs = allExUnivs.map(univ => ({
+        label: univ.univ_name,
+        value: univ.id
+      }));
+      setExUnivList(formattedExUnivs);
+    }
+  }, [country, allExUnivs]);
+
+  const onClick = async () => {
+    try {
+      const userData = {
+        account: {
+          username: id,
+          password: password,
+          passwordConfirm: passwordCheck,
+          nickname: nickname,
+          gender: gender,
+          homeUniversity: univ.value || univ,
+        },
+        dispatch:{
+          country: country.value || country,
+          hostUniversity: exUniv.value || exUniv,
+          dispatchType: type,
+          term:  time,
+          duration: period,
+        }
+      };
+      const res = await SignupAPI.signup(userData);
+      console.log("전송할 데이터:", userData);
+      console.log("API 응답:", res);
+      
+      // 응답에 에러가 있는지 확인
+      if (res.error) {
+        // 각 필드별 에러 처리
+        if (res.error.account) {
+          if (res.error.account.username) {
+            setIdError("* " + res.error.account.username[0]);
+          }
+          if (res.error.account.password) {
+            setPasswordError("* " + res.error.account.password[0]);
+          }
+          if (res.error.account.nickname) {
+            setNicknameError("* " + res.error.account.nickname[0]);
+          }
+        }
+        // 기타 에러
+        if (res.error.dispatch) {
+          console.log("파견 정보 에러:", res.error.dispatch);
+        }
+        alert("회원가입에 실패하였습니다.");
+        return; // 에러가 있으면 여기서 중단
+      }
+      
+      // 성공 시에만 페이지 이동
+      navigate("/signup/complete");
+    } catch(err) {
+      console.error("회원가입 네트워크 에러:", err);
+      alert("네트워크 오류가 발생했습니다.");
+    }
+  }
 
   // 각 인풋필드에 대한 ref 생성 (13개 필드)
   const inputRefs = Array.from({length: 13}, () => useRef(null));
@@ -217,6 +302,7 @@ const SignupPage = () => {
     
     // 에러가 있으면 로그인 실행하지 않음
     if (hasError) {
+      alert("회원가입에 실패하였습니다.");
       return;
     }
     
@@ -359,7 +445,7 @@ const SignupPage = () => {
           <h3>파견 국가</h3>
           <SearchDropdown
             ref={inputRefs[7]}
-            options={univList}
+            options={countryList}
             placeholder="파견 국가 선택"
             searchPlaceholder="파견 국가를 검색하세요"
             onSelect={handleCountrySelect}
@@ -374,7 +460,7 @@ const SignupPage = () => {
           <h3>파견 학교</h3>
           <SearchDropdown
             ref={inputRefs[8]}
-            options={univList}
+            options={exUnivList}
             placeholder="파견 학교 선택"
             searchPlaceholder="파견 학교를 검색하세요"
             onSelect={handleExUnivSelect}
@@ -432,7 +518,7 @@ const SignupPage = () => {
         ref={inputRefs[12]}
         onClick={handleSignup}
       >
-        회원가입
+        <span className="h2">회원가입</span>
       </SquareButton>
     </Wrapper>
   );
