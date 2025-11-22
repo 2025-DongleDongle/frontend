@@ -31,7 +31,11 @@ const Feed = ({
   // 로그인/로그아웃 상태 변화 감지하여 isLoggedIn 갱신
   useEffect(() => {
     const handleStorageChange = () => {
-      setIsLoggedIn(!!localStorage.getItem("token"));
+      const token = localStorage.getItem("token");
+      setIsLoggedIn(!!token);
+      if (!token) {
+        setIsScrapped(false);
+      }
     };
     window.addEventListener("storage", handleStorageChange);
     return () => {
