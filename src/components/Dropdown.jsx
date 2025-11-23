@@ -32,7 +32,7 @@ const Dropdown = ({
   const handleSelect = (option) => {
     setSelected(option);
     setIsOpen(false);
-    if (onSelect) onSelect(option.value);
+    if (onSelect) onSelect(option); // onSelect 수정 (label도 전달하게끔)
   };
 
   // 외부 클릭 시 닫기
@@ -81,7 +81,6 @@ const Dropdown = ({
 };
 
 export default Dropdown;
-
 
 const DropdownWrapper = styled.div`
   position: relative;
