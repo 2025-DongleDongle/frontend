@@ -183,8 +183,8 @@ const TransactionEdit = forwardRef(
                   options={paymentMethodOptions}
                   value={formData.payment_method}
                   placeholder={paymentMethodOptions[0].label}
-                  onSelect={(value) =>
-                    handleInputChange("payment_method", value)
+                  onSelect={(option) =>
+                    handleInputChange("payment_method", option.value)
                   }
                   customStyle={`
                 min-width: 100%;
@@ -207,7 +207,9 @@ const TransactionEdit = forwardRef(
                 options={categoryOptions}
                 value={formData.category}
                 placeholder={categoryOptions[0].label}
-                onSelect={(value) => handleInputChange("category", value)}
+                onSelect={(option) =>
+                  handleInputChange("category", option.value)
+                }
                 customStyle={`
                 height: 2.53125rem;
                 font-size: 0.84375rem;
@@ -235,7 +237,9 @@ const TransactionEdit = forwardRef(
                 options={currencyOptions}
                 value={formData.currency_code}
                 placeholder={currencyOptions[0].label}
-                onSelect={(value) => handleInputChange("currency_code", value)}
+                onSelect={(option) =>
+                  handleInputChange("currency_code", option.value)
+                }
                 customStyle={`
                 height: 2.53125rem;
                 font-size: 0.84375rem;
