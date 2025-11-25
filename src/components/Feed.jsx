@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Modal from "./Modal";
 import { FeedsActionAPI } from "@/apis";
-import currencySymbolMap from "../utils/currencySymbolMap";
+import currencySymbolMap from "@/utils/currencySymbolMap";
 
 const Feed = ({
   id,
