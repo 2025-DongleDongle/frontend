@@ -37,6 +37,9 @@ const HomePage = () => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  // 검색 중 여부
+  const [searching, setSearching] = useState(false);
+
   // Feed에서 scrap/un-scrap 시 호출되는 핸들러
   const fetchFeeds = async () => {
     try {
@@ -54,14 +57,34 @@ const HomePage = () => {
     }
   };
 
+  // 검색어 상태
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Feed 검색 시 호출되는 핸들러
+  const onSearch = async () => {
+    setLoading(true);
+    setSearching(true);
+    setSort("latest"); // 버튼만 최신순으로
+    try {
+      const data = await FeedsAPI.searchFeeds(searchQuery);
+      setFeeds(data.data);
+    } catch (err) {
+      setFeeds([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleScrapChange = () => {
     fetchFeeds();
   };
 
   useEffect(() => {
-    setLoading(true);
-    fetchFeeds();
-  }, [sort]);
+    if (!searching) {
+      setLoading(true);
+      fetchFeeds();
+    }
+  }, [sort, searching]);
 
   // 로그인/로그아웃 상태 변화 감지하여 isLoggedIn 갱신
   useEffect(() => {
@@ -76,6 +99,8 @@ const HomePage = () => {
 
   const handleSortClick = (sortType) => {
     setSort(sortType);
+    setSearchQuery("");
+    setSearching(false); // 정렬 버튼 클릭 시 검색모드 해제
   };
 
   const profileClicked = () => {
@@ -103,11 +128,19 @@ const HomePage = () => {
         <Top>
           <h1>✈️ 다른 사람들의 가계부 둘러보기</h1>
           <SearchBox>
-            <svg xmlns="http://www.w3.org/2000/svg" width="23" height="24" viewBox="0 0 23 24" fill="none">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="23" height="24" viewBox="0 0 23 24" fill="none"
+              style={{ cursor: 'pointer' }}
+              onClick={onSearch}
+            >
               <path d="M0 12.9804C0 19.0663 4.93366 24 11.0196 24C17.1056 24 22.0393 19.0663 22.0393 12.9804V11.0196C22.0393 4.93366 17.1056 0 11.0196 0C4.93366 0 0 4.93365 0 11.0196V12.9804Z" fill="none"/>
               <path d="M18.3203 20.7998L12.6064 15.1998C12.1529 15.5554 11.6314 15.8368 11.0419 16.0442C10.4523 16.2517 9.82503 16.3554 9.15992 16.3554C7.51227 16.3554 6.11781 15.7961 4.97655 14.6776C3.83528 13.5591 3.26465 12.1924 3.26465 10.5776C3.26465 8.96277 3.83528 7.5961 4.97655 6.47758C6.11781 5.35906 7.51227 4.7998 9.15992 4.7998C10.8076 4.7998 12.202 5.35906 13.3433 6.47758C14.4846 7.5961 15.0552 8.96277 15.0552 10.5776C15.0552 11.2294 14.9494 11.8442 14.7378 12.422C14.5261 12.9998 14.2389 13.5109 13.8761 13.9554L19.59 19.5554L18.3203 20.7998ZM9.15992 14.5776C10.2936 14.5776 11.2573 14.1887 12.0509 13.4109C12.8445 12.6331 13.2413 11.6887 13.2413 10.5776C13.2413 9.46647 12.8445 8.52203 12.0509 7.74425C11.2573 6.96647 10.2936 6.57758 9.15992 6.57758C8.02622 6.57758 7.06257 6.96647 6.26897 7.74425C5.47538 8.52203 5.07858 9.46647 5.07858 10.5776C5.07858 11.6887 5.47538 12.6331 6.26897 13.4109C7.06257 14.1887 8.02622 14.5776 9.15992 14.5776Z" fill="#595959"/>
             </svg>
             <Inputfield
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') onSearch(); }}
               placeholder="관심 대학 또는 국가의 가계부를 검색하세요"
               customStyle={HomeInputStyle}
               placeholderStyle={HomePlaceholderStyle}
