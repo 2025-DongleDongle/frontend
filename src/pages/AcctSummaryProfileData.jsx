@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import UploadTopbar from "../components/topbar/UploadTopbar";
@@ -6,15 +6,41 @@ import Inputfield from "../components/Inputfield";
 import Modal from "../components/Modal";
 import CategoryCard from "../components/CategoryCard";
 import CircleButton from "../components/button/CircleButton";
+import { createSnapshot, getLedgerSummary } from "../apis/summaries/snapshot";
+import { useProfile } from "../hooks";
 
 const AcctSummaryProfileData = () => {
   const navigate = useNavigate();
+  const { profile } = useProfile();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [summaryData, setSummaryData] = useState(null);
+  const [categoryData, setCategoryData] = useState([]);
+
+  // 페이지 로드 → 비용 data
+  useEffect(() => {
+    fetchLedgerSummary();
+  }, []);
+
+  const fetchLedgerSummary = async () => {
+    try {
+      setLoading(true);
+      const response = await getLedgerSummary();
+      if (response.status === "success" && response.data) {
+        setSummaryData(response.data);
+        setCategoryData(response.data.categories || []);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching ledger summary:", error);
+      setLoading(false);
+    }
+  };
 
   const [formData, setFormData] = useState({
     monthly_spend_in_korea: "",
-    meal_frequency: "", // 기본값: 2회
+    meal_frequency: "", 
     dineout_per_week: "",
     coffee_per_week: "",
     smoking_per_day: "",
@@ -22,130 +48,9 @@ const AcctSummaryProfileData = () => {
     shopping_per_month: "",
     culture_per_month: "",
     residence_type: "",
-    commute: null, // 초기값 null로  (선택 X 상태)
+    commute: null, // 
     summary_note: "",
   });
-
-  // 임시로 넣었음 (실제로는 API: GET /summaries/ledger-summary/ 에서 받아올 데이터)
-  // API 응답: { average_monthly_living_expense, categories, base_dispatch_cost }
-  const summaryData = {
-    average_monthly_living_expense: {
-      foreign_amount: "2026.25",
-      foreign_currency: "USD",
-      krw_amount: "2634475",
-      krw_currency: "KRW",
-    },
-    base_dispatch_cost: {
-      flight: {
-        foreign_amount: "1200.00",
-        foreign_currency: "USD",
-        krw_amount: "1560000",
-        krw_currency: "KRW",
-      },
-      insurance: {
-        foreign_amount: "500.00",
-        foreign_currency: "USD",
-        krw_amount: "650000",
-        krw_currency: "KRW",
-      },
-      visa: {
-        foreign_amount: "160.00",
-        foreign_currency: "USD",
-        krw_amount: "208000",
-        krw_currency: "KRW",
-      },
-      tuition: {
-        foreign_amount: "3000.00",
-        foreign_currency: "USD",
-        krw_amount: "3900000",
-        krw_currency: "KRW",
-      },
-      total: {
-        foreign_amount: "4860.00",
-        foreign_currency: "USD",
-        krw_amount: "6318000",
-        krw_currency: "KRW",
-      },
-    },
-  };
-
-  //
-  // ————————————————————————————— 카테고리 —————————————————————————————
-
-  const categoryData = [
-    {
-      code: "FOOD",
-      label: "식비",
-      foreign_amount: 450.25,
-      foreign_currency: "USD",
-      krw_amount: 585325,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "HOUSING",
-      label: "주거비",
-      foreign_amount: 800.0,
-      foreign_currency: "USD",
-      krw_amount: 1040000,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "TRANSPORT",
-      label: "교통비",
-      foreign_amount: 120.5,
-      foreign_currency: "USD",
-      krw_amount: 156650,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "SHOPPING",
-      label: "쇼핑비",
-      foreign_amount: 200.0,
-      foreign_currency: "USD",
-      krw_amount: 260000,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "TRAVEL",
-      label: "여행비",
-      foreign_amount: 150.0,
-      foreign_currency: "USD",
-      krw_amount: 195000,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "STUDY_MATERIALS",
-      label: "교재비",
-      foreign_amount: 180.0,
-      foreign_currency: "USD",
-      krw_amount: 234000,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "ALLOWANCE",
-      label: "용돈",
-      foreign_amount: 50.0,
-      foreign_currency: "USD",
-      krw_amount: 65000,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "ETC",
-      label: "기타",
-      foreign_amount: 75.5,
-      foreign_currency: "USD",
-      krw_amount: 98150,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-  ];
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -164,7 +69,6 @@ const AcctSummaryProfileData = () => {
 
   const handleConfirmPublish = async () => {
     try {
-      // API 명세서에 맞게 데이터 구성
       const requestData = {};
 
       // 필수 필드
@@ -174,7 +78,7 @@ const AcctSummaryProfileData = () => {
         );
       }
 
-      // 선택 필드 (값 있을 때만? 추가)
+      // 선택 필드 (값 있을 때만 추가)
       if (formData.meal_frequency) {
         requestData.meal_frequency = formData.meal_frequency;
       }
@@ -199,38 +103,20 @@ const AcctSummaryProfileData = () => {
       if (formData.residence_type) {
         requestData.residence_type = formData.residence_type;
       }
-      // commute는 boolean이므로 명시적으로 선택한 경우에만 추가
       if (formData.commute !== null && formData.commute !== undefined) {
         requestData.commute = formData.commute;
       }
       if (formData.summary_note) {
         requestData.summary_note = formData.summary_note;
       }
-
-      // API 호출
-      // const response = await fetch('/summaries/snapshot/', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${accessToken}`
-      //   },
-      //   body: JSON.stringify(requestData)
-      // });
-      //
-      // if (!response.ok) {
-      //   throw new Error('게시 실패');
-      // }
-      //
-      // const result = await response.json();
-      // console.log('게시 성공:', result.data);
-
-      console.log("Publishing data:", requestData);
-
-      // 성공 시 -> AcctSummaryComplete 페이지로 이동
-      navigate("/summaries/complete");
+      const response = await createSnapshot(requestData);
+      if (response.status === "success") {
+        // 성공하면? AcctSummaryComplete 페이지로 ㄱㄱ
+        navigate("/summaries/complete");
+      }
     } catch (error) {
       console.error("Error publishing summary:", error);
-      alert("게시 중 오류가 발생했습니다.");
+      alert(error.message || "게시 중 오류가 발생했습니다.");
     }
   };
 
@@ -238,51 +124,86 @@ const AcctSummaryProfileData = () => {
     <PageWrapper>
       <UploadTopbar onPublish={handlePublish} />
 
-      <ContentWrapper>
-        <Title>내 가계부 요약본</Title>
-        {/* ————————————————————— 프로필 ————————————————————— */}
-        <ProfileBox>
-          <ProfileImage>
-            <Flag>
-              <img src="/images/flags/미국.png" alt="미국" />
-            </Flag>
-            <Type>방문학생</Type>
-          </ProfileImage>
-          <ProfileInfo>
-            <p className="body1">화연이에연 / 여</p>
-            <h2>미국 University of California, Davis</h2>
-            <p className="body1">25년도 1학기 (5개월)</p>
-          </ProfileInfo>
-        </ProfileBox>
-
-        {/* ————————————————————— 세부 프로필 ————————————————————— */}
-        <SectionTitle>세부 프로필</SectionTitle>
-        <Section>
-          <FormGrid>
-            <Required>*필수입력</Required>
-            <FormRow>
-              <Label>한국에서의 월 지출</Label>
-              <InputWrapper>
-                <Inputfield
-                  type="number"
-                  placeholder="금액을 입력해주세요"
-                  value={formData.monthly_spend_in_korea}
-                  onChange={(e) =>
-                    handleInputChange("monthly_spend_in_korea", e.target.value)
-                  }
+      {loading ? (
+        <ContentWrapper>
+          <p>Loading...</p>
+        </ContentWrapper>
+      ) : (
+        <ContentWrapper>
+          <Title>내 가계부 요약본</Title>
+          {/* ————————————————————— 프로필 ————————————————————— */}
+          <ProfileBox>
+            <ProfileImage>
+              <Flag>
+                <img
+                  src={`/images/flags/${encodeURIComponent(
+                    profile?.exchange_country || "미국"
+                  )}.png`}
+                  alt={profile?.exchange_country || "미국"}
                 />
-              </InputWrapper>
-            </FormRow>
+              </Flag>
+              <Type>
+                {profile?.exchange_type === "EX"
+                  ? "교환학생"
+                  : profile?.exchange_type === "VS"
+                  ? "방문학생"
+                  : profile?.exchange_type === "OT"
+                  ? "기타"
+                  : "방문학생"}
+              </Type>
+            </ProfileImage>
+            <ProfileInfo>
+              <p className="body1">
+                {profile?.name || "사용자"} /{" "}
+                {profile?.gender === "M"
+                  ? "남"
+                  : profile?.gender === "F"
+                  ? "여"
+                  : "-"}
+              </p>
+              <h2>
+                {profile?.exchange_country || "미국"}{" "}
+                {profile?.exchange_university ||
+                  "University of California, Davis"}
+              </h2>
+              <p className="body1">
+                {profile?.exchange_semester || "25년도 1학기"} (
+                {profile?.exchange_period || "5개월"})
+              </p>
+            </ProfileInfo>
+          </ProfileBox>
 
-            <Optional>* 선택입력</Optional>
-            <FormRow>
-              <Label>식사</Label>
-              <ButtonGroup1>
-                {["1", "2", "3"].map((freq) => (
-                  <CircleButton
-                    key={freq}
-                    onClick={() => handleInputChange("meal_frequency", freq)}
-                    customStyle={`
+          {/* ————————————————————— 세부 프로필 ————————————————————— */}
+          <SectionTitle>세부 프로필</SectionTitle>
+          <Section>
+            <FormGrid>
+              <Required>*필수입력</Required>
+              <FormRow>
+                <Label>한국에서의 월 지출</Label>
+                <InputWrapper>
+                  <Inputfield
+                    type="number"
+                    placeholder="금액을 입력해주세요"
+                    value={formData.monthly_spend_in_korea}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "monthly_spend_in_korea",
+                        e.target.value
+                      )
+                    }
+                  />
+                </InputWrapper>
+              </FormRow>
+
+              <Optional>* 선택입력</Optional>
+              <FormRow>
+                <Label>식사</Label>
+                <ButtonGroup1>
+                  {["1", "2", "3"].map((freq) => (
+                    <CircleButton
+                      key={freq}
+                      onClick={() => handleInputChange("meal_frequency", freq)}
+                      customStyle={`
                       font-size: 0.85rem;
                       height: 2.15625rem;
                       background-color: ${
@@ -301,156 +222,156 @@ const AcctSummaryProfileData = () => {
                           : "1px solid var(--gray, #A5A5A5)"
                       };
                     `}
-                  >
-                    하루 {freq}회
-                  </CircleButton>
-                ))}
-              </ButtonGroup1>
-            </FormRow>
+                    >
+                      하루 {freq}회
+                    </CircleButton>
+                  ))}
+                </ButtonGroup1>
+              </FormRow>
 
-            <FormRow>
-              <Label>외식 및 배달음식 소비</Label>
-              <InputWrapper>
-                <span style={{ minWidth: "fit-content" }}>주</span>
-                <Inputfield
-                  customStyle={`
+              <FormRow>
+                <Label>외식 및 배달음식 소비</Label>
+                <InputWrapper>
+                  <span style={{ minWidth: "fit-content" }}>주</span>
+                  <Inputfield
+                    customStyle={`
                     color: var(--black, #000);
                     border: none;
                     `}
-                  type="number"
-                  placeholder=""
-                  value={formData.dineout_per_week}
-                  onChange={(e) =>
-                    handleInputChange("dineout_per_week", e.target.value)
-                  }
-                />
-                <Unit>회</Unit>
-              </InputWrapper>
-            </FormRow>
+                    type="number"
+                    placeholder=""
+                    value={formData.dineout_per_week}
+                    onChange={(e) =>
+                      handleInputChange("dineout_per_week", e.target.value)
+                    }
+                  />
+                  <Unit>회</Unit>
+                </InputWrapper>
+              </FormRow>
 
-            <FormRow>
-              <Label>커피 등 음료 소비</Label>
-              <InputWrapper>
-                <span style={{ minWidth: "fit-content" }}>주</span>
-                <Inputfield
-                  customStyle={`
+              <FormRow>
+                <Label>커피 등 음료 소비</Label>
+                <InputWrapper>
+                  <span style={{ minWidth: "fit-content" }}>주</span>
+                  <Inputfield
+                    customStyle={`
                     color: var(--black, #000);
                     border: none;
                     `}
-                  type="number"
-                  placeholder=""
-                  value={formData.coffee_per_week}
-                  onChange={(e) =>
-                    handleInputChange("coffee_per_week", e.target.value)
-                  }
-                />
-                <Unit>회</Unit>
-              </InputWrapper>
-            </FormRow>
+                    type="number"
+                    placeholder=""
+                    value={formData.coffee_per_week}
+                    onChange={(e) =>
+                      handleInputChange("coffee_per_week", e.target.value)
+                    }
+                  />
+                  <Unit>회</Unit>
+                </InputWrapper>
+              </FormRow>
 
-            <FormRow>
-              <Label>흡연</Label>
-              <InputWrapper>
-                <span style={{ minWidth: "fit-content" }}>하루</span>
-                <Inputfield
-                  customStyle={`
+              <FormRow>
+                <Label>흡연</Label>
+                <InputWrapper>
+                  <span style={{ minWidth: "fit-content" }}>하루</span>
+                  <Inputfield
+                    customStyle={`
                     color: var(--black, #000);
                     border: none;
                     `}
-                  type="number"
-                  placeholder=""
-                  value={formData.smoking_per_day}
-                  onChange={(e) =>
-                    handleInputChange("smoking_per_day", e.target.value)
-                  }
-                />
-                <Unit>회</Unit>
-              </InputWrapper>
-            </FormRow>
+                    type="number"
+                    placeholder=""
+                    value={formData.smoking_per_day}
+                    onChange={(e) =>
+                      handleInputChange("smoking_per_day", e.target.value)
+                    }
+                  />
+                  <Unit>회</Unit>
+                </InputWrapper>
+              </FormRow>
 
-            <FormRow>
-              <Label>음주</Label>
-              <InputWrapper>
-                <span style={{ minWidth: "fit-content" }}>주</span>
-                <Inputfield
-                  customStyle={`
+              <FormRow>
+                <Label>음주</Label>
+                <InputWrapper>
+                  <span style={{ minWidth: "fit-content" }}>주</span>
+                  <Inputfield
+                    customStyle={`
                     color: var(--black, #000);
                     border: none;
                     `}
-                  type="number"
-                  placeholder=""
-                  value={formData.drinking_per_week}
-                  onChange={(e) =>
-                    handleInputChange("drinking_per_week", e.target.value)
-                  }
-                />
-                <Unit>회</Unit>
-              </InputWrapper>
-            </FormRow>
+                    type="number"
+                    placeholder=""
+                    value={formData.drinking_per_week}
+                    onChange={(e) =>
+                      handleInputChange("drinking_per_week", e.target.value)
+                    }
+                  />
+                  <Unit>회</Unit>
+                </InputWrapper>
+              </FormRow>
 
-            <FormRow>
-              <Label>쇼핑</Label>
-              <InputWrapper>
-                <span style={{ minWidth: "fit-content" }}>월</span>
-                <Inputfield
-                  customStyle={`
+              <FormRow>
+                <Label>쇼핑</Label>
+                <InputWrapper>
+                  <span style={{ minWidth: "fit-content" }}>월</span>
+                  <Inputfield
+                    customStyle={`
                     color: var(--black, #000);
                     border: none;
                     `}
-                  type="number"
-                  placeholder=""
-                  value={formData.shopping_per_month}
-                  onChange={(e) =>
-                    handleInputChange("shopping_per_month", e.target.value)
-                  }
-                />
-                <Unit>회</Unit>
-              </InputWrapper>
-            </FormRow>
+                    type="number"
+                    placeholder=""
+                    value={formData.shopping_per_month}
+                    onChange={(e) =>
+                      handleInputChange("shopping_per_month", e.target.value)
+                    }
+                  />
+                  <Unit>회</Unit>
+                </InputWrapper>
+              </FormRow>
 
-            <FormRow>
-              <Label>여가 및 문화생활 소비</Label>
-              <InputWrapper>
-                <span style={{ minWidth: "fit-content" }}>월</span>
-                <Inputfield
-                  customStyle={`
+              <FormRow>
+                <Label>여가 및 문화생활 소비</Label>
+                <InputWrapper>
+                  <span style={{ minWidth: "fit-content" }}>월</span>
+                  <Inputfield
+                    customStyle={`
                     color: var(--black, #000);
                     border: none;
                     `}
-                  type="number"
-                  placeholder=""
-                  value={formData.culture_per_month}
-                  onChange={(e) =>
-                    handleInputChange("culture_per_month", e.target.value)
-                  }
-                />
-                <Unit>회</Unit>
-              </InputWrapper>
-            </FormRow>
+                    type="number"
+                    placeholder=""
+                    value={formData.culture_per_month}
+                    onChange={(e) =>
+                      handleInputChange("culture_per_month", e.target.value)
+                    }
+                  />
+                  <Unit>회</Unit>
+                </InputWrapper>
+              </FormRow>
 
-            <FormRow>
-              <Label>거주유형</Label>
-              <InputWrapper>
-                <Inputfield
-                  customStyle={`
+              <FormRow>
+                <Label>거주유형</Label>
+                <InputWrapper>
+                  <Inputfield
+                    customStyle={`
                     color: var(--black, #000);
                   `}
-                  type="text"
-                  placeholder="거주 유형을 직접 입력해주세요"
-                  value={formData.residence_type}
-                  onChange={(e) =>
-                    handleInputChange("residence_type", e.target.value)
-                  }
-                />
-              </InputWrapper>
-            </FormRow>
+                    type="text"
+                    placeholder="거주 유형을 직접 입력해주세요"
+                    value={formData.residence_type}
+                    onChange={(e) =>
+                      handleInputChange("residence_type", e.target.value)
+                    }
+                  />
+                </InputWrapper>
+              </FormRow>
 
-            <FormRow>
-              <Label>통학 여부</Label>
-              <ButtonGroup2>
-                <CircleButton
-                  onClick={() => handleInputChange("commute", true)}
-                  customStyle={`
+              <FormRow>
+                <Label>통학 여부</Label>
+                <ButtonGroup2>
+                  <CircleButton
+                    onClick={() => handleInputChange("commute", true)}
+                    customStyle={`
                     width: 90%;
                     height: 2.15625rem;
                     font-size: 0.85rem;
@@ -470,12 +391,12 @@ const AcctSummaryProfileData = () => {
                         : "1px solid var(--gray, #A5A5A5)"
                     };
                   `}
-                >
-                  예
-                </CircleButton>
-                <CircleButton
-                  onClick={() => handleInputChange("commute", false)}
-                  customStyle={`
+                  >
+                    예
+                  </CircleButton>
+                  <CircleButton
+                    onClick={() => handleInputChange("commute", false)}
+                    customStyle={`
                       width: 100%;
                       height: 2.15625rem;
                       font-size: 0.85rem;
@@ -495,111 +416,117 @@ const AcctSummaryProfileData = () => {
                         : "1px solid var(--gray, #A5A5A5)"
                     };
                   `}
-                >
-                  아니오
-                </CircleButton>
-              </ButtonGroup2>
-            </FormRow>
-          </FormGrid>
-        </Section>
+                  >
+                    아니오
+                  </CircleButton>
+                </ButtonGroup2>
+              </FormRow>
+            </FormGrid>
+          </Section>
 
-        {/* ————————————————————— 가계부 요약본  ————————————————————— */}
+          {/* ————————————————————— 가계부 요약본  ————————————————————— */}
 
-        <Section2Header>
-          <TitleWrapper>
-            <Username>화연이에연</Username>
-            <SectionTitle>님의 가계부 요약본</SectionTitle>
-          </TitleWrapper>
-          <Notice>* 기록시점의 환율 기준</Notice>
-        </Section2Header>
-        <Section2>
-          <CategorySection>
-            <CategoryHeader>
-              <CategoryTitle>한달평균생활비</CategoryTitle>
-              <CategoryAmount>
-                {summaryData.average_monthly_living_expense.foreign_currency ===
-                "KRW"
-                  ? "₩"
-                  : "$"}
-                {parseFloat(
-                  summaryData.average_monthly_living_expense.foreign_amount
-                ).toFixed(2)}{" "}
-                (₩
-                {parseFloat(
-                  summaryData.average_monthly_living_expense.krw_amount
-                ).toLocaleString()}
-                )
-              </CategoryAmount>
-            </CategoryHeader>
-            <CategoryGrid>
-              {categoryData.map((category) => (
-                <CategoryCard key={category.code} categoryData={category} />
-              ))}
-            </CategoryGrid>
-          </CategorySection>
-
-          <BasicCostSection>
-            <BasicCostHeader>
-              <BasicCostTitle>기본파견비용</BasicCostTitle>
-              <BasicCostAmount>
-                {summaryData.base_dispatch_cost.total.foreign_currency === "KRW"
-                  ? "₩"
-                  : "$"}
-                {parseFloat(
-                  summaryData.base_dispatch_cost.total.foreign_amount
-                ).toFixed(2)}{" "}
-                (₩
-                {parseFloat(
-                  summaryData.base_dispatch_cost.total.krw_amount
-                ).toLocaleString()}
-                )
-              </BasicCostAmount>
-            </BasicCostHeader>
-            <BasicCostGrid>
-              {[
-                {
-                  code: "flight",
-                  label: "항공권",
-                  ...summaryData.base_dispatch_cost.flight,
-                  budget_diff: null,
-                },
-                {
-                  code: "insurance",
-                  label: "보험료",
-                  ...summaryData.base_dispatch_cost.insurance,
-                  budget_diff: null,
-                },
-                {
-                  code: "visa",
-                  label: "비자",
-                  ...summaryData.base_dispatch_cost.visa,
-                  budget_diff: null,
-                },
-                {
-                  code: "tuition",
-                  label: "등록금",
-                  ...summaryData.base_dispatch_cost.tuition,
-                  budget_diff: null,
-                },
-              ].map((cost) => (
-                <CategoryCard key={cost.code} categoryData={cost} />
-              ))}
-            </BasicCostGrid>
-          </BasicCostSection>
-        </Section2>
-
-        {/* ————————————————————— 한줄평 ————————————————————— */}
-
-        <FormRow2 $fullWidth>
           <Section2Header>
             <TitleWrapper>
-              <Username>화연이에연</Username>
-              <SectionTitle>님이 남긴 한 마디</SectionTitle>
+              <Username>{profile?.name || "사용자"}</Username>
+              <SectionTitle>님의 가계부 요약본</SectionTitle>
             </TitleWrapper>
-            <OptionalNotice>* 선택입력</OptionalNotice>
+            <Notice>* 기록시점의 환율 기준</Notice>
           </Section2Header>
-          <Inputfield
-            customStyle={`
+          <Section2>
+            <CategorySection>
+              <CategoryHeader>
+                <CategoryTitle>한달평균생활비</CategoryTitle>
+                {summaryData && (
+                  <CategoryAmount>
+                    {summaryData.average_monthly_living_expense
+                      .foreign_currency === "KRW"
+                      ? "₩"
+                      : "$"}
+                    {parseFloat(
+                      summaryData.average_monthly_living_expense.foreign_amount
+                    ).toFixed(2)}{" "}
+                    (₩
+                    {parseFloat(
+                      summaryData.average_monthly_living_expense.krw_amount
+                    ).toLocaleString()}
+                    )
+                  </CategoryAmount>
+                )}
+              </CategoryHeader>
+              <CategoryGrid>
+                {categoryData.map((category) => (
+                  <CategoryCard key={category.code} categoryData={category} />
+                ))}
+              </CategoryGrid>
+            </CategorySection>
+
+            <BasicCostSection>
+              <BasicCostHeader>
+                <BasicCostTitle>기본파견비용</BasicCostTitle>
+                {summaryData && (
+                  <BasicCostAmount>
+                    {summaryData.base_dispatch_cost.total.foreign_currency ===
+                    "KRW"
+                      ? "₩"
+                      : "$"}
+                    {parseFloat(
+                      summaryData.base_dispatch_cost.total.foreign_amount
+                    ).toFixed(2)}{" "}
+                    (₩
+                    {parseFloat(
+                      summaryData.base_dispatch_cost.total.krw_amount
+                    ).toLocaleString()}
+                    )
+                  </BasicCostAmount>
+                )}
+              </BasicCostHeader>
+              <BasicCostGrid>
+                {summaryData &&
+                  [
+                    {
+                      code: "flight",
+                      label: "항공권",
+                      ...summaryData.base_dispatch_cost.flight,
+                      budget_diff: null,
+                    },
+                    {
+                      code: "insurance",
+                      label: "보험료",
+                      ...summaryData.base_dispatch_cost.insurance,
+                      budget_diff: null,
+                    },
+                    {
+                      code: "visa",
+                      label: "비자",
+                      ...summaryData.base_dispatch_cost.visa,
+                      budget_diff: null,
+                    },
+                    {
+                      code: "tuition",
+                      label: "등록금",
+                      ...summaryData.base_dispatch_cost.tuition,
+                      budget_diff: null,
+                    },
+                  ].map((cost) => (
+                    <CategoryCard key={cost.code} categoryData={cost} />
+                  ))}
+              </BasicCostGrid>
+            </BasicCostSection>
+          </Section2>
+
+          {/* ————————————————————— 한줄평 ————————————————————— */}
+
+          <FormRow2 $fullWidth>
+            <Section2Header>
+              <TitleWrapper>
+                <Username>{profile?.name || "사용자"}</Username>
+                <SectionTitle>님이 남긴 한 마디</SectionTitle>
+              </TitleWrapper>
+              <OptionalNotice>* 선택입력</OptionalNotice>
+            </Section2Header>
+            <Inputfield
+              customStyle={`
             width: 57.00875rem;
             height: 4.55456rem;
             flex-shrink: 0;
@@ -607,13 +534,16 @@ const AcctSummaryProfileData = () => {
             border: 1px solid var(--light-gray, #D9D9D9);
             background: var(--text-input, #FCFCFC);
             `}
-            type="text"
-            placeholder="교통비가 생각보다 많이 들었어요!"
-            value={formData.summary_note}
-            onChange={(e) => handleInputChange("summary_note", e.target.value)}
-          />
-        </FormRow2>
-      </ContentWrapper>
+              type="text"
+              placeholder="교통비가 생각보다 많이 들었어요!"
+              value={formData.summary_note}
+              onChange={(e) =>
+                handleInputChange("summary_note", e.target.value)
+              }
+            />
+          </FormRow2>
+        </ContentWrapper>
+      )}
 
       {/* —————————————————————————— 모달 —————————————————————————— */}
       <Modal
@@ -646,7 +576,7 @@ export default AcctSummaryProfileData;
 
 const PageWrapper = styled.div`
   min-height: 100vh;
-  background: var(--white);
+  background: var(--white, #ffffff);
   padding-top: 5.5rem;
 `;
 
@@ -660,7 +590,7 @@ const ContentWrapper = styled.div`
 `;
 
 const Title = styled.h1`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 2rem;
   font-weight: 700;
   margin: 0;
@@ -690,7 +620,7 @@ const Flag = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--sub-btn);
+  background: var(--sub-btn, #f4f4f4);
   border-radius: 50%;
   overflow: hidden;
   flex: 0 0 auto;
@@ -716,7 +646,7 @@ const Type = styled.div`
   font-family: "Pretendard Variable";
   font-size: 0.85rem;
   font-weight: 400;
-  color: var(--white);
+  color: var(--white, #ffffff);
 `;
 
 const ProfileInfo = styled.div`
@@ -807,7 +737,7 @@ const Section = styled.section`
 `;
 
 const SectionTitle = styled.h2`
-  color: var(--black);
+  color: var(--black, #000);
   margin-left: 0.4rem;
   text-align: left;
 `;
@@ -828,7 +758,7 @@ const InputWrapper = styled.div`
 `;
 
 const Unit = styled.span`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 0.875rem;
   font-weight: 400;
   white-space: nowrap;
@@ -876,7 +806,7 @@ const Section2 = styled.section`
   justify-content: center;
   align-items: center;
   border-radius: 0.625rem;
-  border: 1px solid var(--light-gray);
+  border: 1px solid var(--light-gray, #d9d9d9);
   margin: 0;
 `;
 
@@ -893,13 +823,13 @@ const CategoryHeader = styled.div`
 `;
 
 const CategoryTitle = styled.h2`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 1.7rem;
   font-weight: 700;
 `;
 
 const CategoryAmount = styled.span`
-  color: var(--deep-blue);
+  color: var(--deep-blue, #0b3e99);
   font-size: 1.7rem;
   font-weight: 700;
 `;
@@ -936,14 +866,14 @@ const BasicCostHeader = styled.div`
 `;
 
 const BasicCostTitle = styled.h2`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 1.7rem;
   font-weight: 700;
   margin: 0;
 `;
 
 const BasicCostAmount = styled.span`
-  color: var(--deep-blue);
+  color: var(--deep-blue, #0b3e99);
   font-size: 1.7rem;
   font-weight: 700;
 `;
