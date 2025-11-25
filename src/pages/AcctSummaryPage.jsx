@@ -5,9 +5,12 @@ import BackTopbar from "../components/topbar/BackTopbar";
 import CategoryCard from "../components/CategoryCard";
 import LikeCircleButton from "../components/button/LikeCircleButton";
 import ScrapCircleButton from "../components/button/ScrapCircleButton";
+import { getSnapshot, getLedgerSummary } from "../apis/summaries/snapshot";
+import { useProfile } from "../hooks";
 
 const AcctSummaryPage = () => {
   const navigate = useNavigate();
+  const { profile } = useProfile();
 
   const [profileData, setProfileData] = useState(null);
   const [summaryData, setSummaryData] = useState(null);
@@ -16,148 +19,17 @@ const AcctSummaryPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // API 연결할 부분
-        // const accessToken = localStorage.getItem('accessToken');
+        setLoading(true);
 
-        // 세부프로필 (앞에서 입력))
-        // const profileResponse = await fetch('/summaries/snapshot/', {
-        //   headers: {
-        //     'Authorization': `Bearer ${accessToken}`
-        //   }
-        // });
-        // const profileResult = await profileResponse.json();
-        // setProfileData(profileResult.data);
+        const profileResponse = await getSnapshot();
+        if (profileResponse.status === "success" && profileResponse.data) {
+          setProfileData(profileResponse.data);
+        }
 
-        // 비용 데이터 (가져오ㅓ야함)
-        // const summaryResponse = await fetch('/summaries/ledger-summary/', {
-        //   headers: {
-        //     'Authorization': `Bearer ${accessToken}`
-        //   }
-        // });
-        // const summaryResult = await summaryResponse.json();
-        // setSummaryData(summaryResult.data);
-
-        // ↓ 이건 어케 표시되는지 보려고 내가 걍.. 암거나 넣은 것
-        setProfileData({
-          monthly_spend_in_korea: "2400000",
-          meal_frequency: "2",
-          dineout_per_week: 3,
-          coffee_per_week: 7,
-          smoking_per_day: 0,
-          drinking_per_week: 2,
-          shopping_per_month: 5,
-          culture_per_month: 2,
-          residence_type: "본가",
-          commute: false,
-          summary_note: "이번 달은 교통비가 생각보다 많이많이 들었어요!",
-        });
-
-        setSummaryData({
-          average_monthly_living_expense: {
-            foreign_amount: "2026.25",
-            foreign_currency: "USD",
-            krw_amount: "2634475",
-            krw_currency: "KRW",
-          },
-          categories: [
-            {
-              code: "FOOD",
-              label: "식비",
-              foreign_amount: "450.25",
-              foreign_currency: "USD",
-              krw_amount: "585325",
-              krw_currency: "KRW",
-            },
-            {
-              code: "HOUSING",
-              label: "주거비",
-              foreign_amount: "800.00",
-              foreign_currency: "USD",
-              krw_amount: "1040000",
-              krw_currency: "KRW",
-            },
-            {
-              code: "TRANSPORT",
-              label: "교통비",
-              foreign_amount: "120.50",
-              foreign_currency: "USD",
-              krw_amount: "156650",
-              krw_currency: "KRW",
-            },
-            {
-              code: "SHOPPING",
-              label: "쇼핑비",
-              foreign_amount: "200.00",
-              foreign_currency: "USD",
-              krw_amount: "260000",
-              krw_currency: "KRW",
-            },
-            {
-              code: "TRAVEL",
-              label: "여행비",
-              foreign_amount: "150.00",
-              foreign_currency: "USD",
-              krw_amount: "195000",
-              krw_currency: "KRW",
-            },
-            {
-              code: "STUDY_MATERIALS",
-              label: "교재비",
-              foreign_amount: "180.00",
-              foreign_currency: "USD",
-              krw_amount: "234000",
-              krw_currency: "KRW",
-            },
-            {
-              code: "ALLOWANCE",
-              label: "용돈",
-              foreign_amount: "50.00",
-              foreign_currency: "USD",
-              krw_amount: "65000",
-              krw_currency: "KRW",
-            },
-            {
-              code: "ETC",
-              label: "기타",
-              foreign_amount: "75.50",
-              foreign_currency: "USD",
-              krw_amount: "98150",
-              krw_currency: "KRW",
-            },
-          ],
-          base_dispatch_cost: {
-            flight: {
-              foreign_amount: "1200.00",
-              foreign_currency: "USD",
-              krw_amount: "1560000",
-              krw_currency: "KRW",
-            },
-            insurance: {
-              foreign_amount: "500.00",
-              foreign_currency: "USD",
-              krw_amount: "650000",
-              krw_currency: "KRW",
-            },
-            visa: {
-              foreign_amount: "160.00",
-              foreign_currency: "USD",
-              krw_amount: "208000",
-              krw_currency: "KRW",
-            },
-            tuition: {
-              foreign_amount: "3000.00",
-              foreign_currency: "USD",
-              krw_amount: "3900000",
-              krw_currency: "KRW",
-            },
-            total: {
-              foreign_amount: "4860.00",
-              foreign_currency: "USD",
-              krw_amount: "6318000",
-              krw_currency: "KRW",
-            },
-          },
-        });
+        const summaryResponse = await getLedgerSummary();
+        if (summaryResponse.status === "success" && summaryResponse.data) {
+          setSummaryData(summaryResponse.data);
+        }
 
         setLoading(false);
       } catch (error) {
@@ -203,18 +75,45 @@ const AcctSummaryPage = () => {
       <ProfileBox>
         <ProfileImage>
           <Flag>
-            <img src="/images/flags/미국.png" alt="미국" />
+            <img
+              src={`/images/flags/${encodeURIComponent(
+                profile?.exchange_country || "미국"
+              )}.png`}
+              alt={profile?.exchange_country || "미국"}
+            />
           </Flag>
-          <Type>방문학생</Type>
+          <Type>
+            {profile?.exchange_type === "EX"
+              ? "교환학생"
+              : profile?.exchange_type === "VS"
+              ? "방문학생"
+              : profile?.exchange_type === "OT"
+              ? "기타"
+              : "방문학생"}
+          </Type>
         </ProfileImage>
         <ProfileInfo>
           <ProfileNickname>
-            <ProfileText>화연이에연 / 여</ProfileText>
+            <ProfileText>
+              {profile?.name || "사용자"} /{" "}
+              {profile?.gender === "M"
+                ? "남"
+                : profile?.gender === "F"
+                ? "여"
+                : "-"}
+            </ProfileText>
             <ProfileBadge>나</ProfileBadge>
           </ProfileNickname>
           <ProfileWrapper>
-            <h3>미국 University of California, Davis</h3>
-            <p>25년도 1학기 (5개월)</p>
+            <h3>
+              {profile?.exchange_country || "미국"}{" "}
+              {profile?.exchange_university ||
+                "University of California, Davis"}
+            </h3>
+            <p>
+              {profile?.exchange_semester || "25년도 1학기"} (
+              {profile?.exchange_period || "5개월"})
+            </p>
           </ProfileWrapper>
         </ProfileInfo>
         <BtnBox>
@@ -335,7 +234,7 @@ const AcctSummaryPage = () => {
         <Section2>
           <Section2Header>
             <TitleWrapper>
-              <Username>화연이에연</Username>
+              <Username>{profile?.name || "사용자"}</Username>
               <SectionTitle>님의 가계부 요약본</SectionTitle>
             </TitleWrapper>
             <Notice>* 기록시점의 환율 기준</Notice>
@@ -418,7 +317,7 @@ const AcctSummaryPage = () => {
         {profileData.summary_note && (
           <Section3>
             <TitleWrapper>
-              <Username>화연이에연</Username>
+              <Username>{profile?.name || "사용자"}</Username>
               <SectionTitle>님이 남긴 한 마디</SectionTitle>
             </TitleWrapper>
             <DisplayNote>{profileData.summary_note}</DisplayNote>
