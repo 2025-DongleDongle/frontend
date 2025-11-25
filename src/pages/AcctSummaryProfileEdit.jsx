@@ -6,12 +6,21 @@ import Inputfield from "../components/Inputfield";
 import Modal from "../components/Modal";
 import CategoryCard from "../components/CategoryCard";
 import CircleButton from "../components/button/CircleButton";
+import {
+  getSnapshot,
+  updateSnapshot,
+  getLedgerSummary,
+} from "../apis/summaries/snapshot";
+import { useProfile } from "../hooks";
 
 const AcctSummaryProfileEdit = () => {
   const navigate = useNavigate();
+  const { profile } = useProfile();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [summaryData, setSummaryData] = useState(null);
+  const [categoryData, setCategoryData] = useState([]);
 
   const [formData, setFormData] = useState({
     monthly_spend_in_korea: "",
@@ -31,45 +40,36 @@ const AcctSummaryProfileEdit = () => {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        // TODO: 실제 API 호출로 교체
-        // const accessToken = localStorage.getItem('accessToken');
-        // const response = await fetch('/summaries/snapshot/', {
-        //   headers: {
-        //     'Authorization': `Bearer ${accessToken}`
-        //   }
-        // });
-        // const result = await response.json();
-        // const data = result.data;
+        setLoading(true);
 
-        // 임시 데이터 (AcctSummaryPage와 동일)
-        const data = {
-          monthly_spend_in_korea: "2400000",
-          meal_frequency: "2",
-          dineout_per_week: 3,
-          coffee_per_week: 7,
-          smoking_per_day: 0,
-          drinking_per_week: 2,
-          shopping_per_month: 5,
-          culture_per_month: 2,
-          residence_type: "본가",
-          commute: false,
-          summary_note: "이번 달은 교통비가 생각보다 많이많이 들었어요!",
-        };
+        // 세부프로필 조회
+        const profileResponse = await getSnapshot();
+        if (profileResponse.status === "success" && profileResponse.data) {
+          const data = profileResponse.data;
 
-        // formData에 기존 데이터 설정
-        setFormData({
-          monthly_spend_in_korea: data.monthly_spend_in_korea || "",
-          meal_frequency: data.meal_frequency || "",
-          dineout_per_week: data.dineout_per_week?.toString() || "",
-          coffee_per_week: data.coffee_per_week?.toString() || "",
-          smoking_per_day: data.smoking_per_day?.toString() || "",
-          drinking_per_week: data.drinking_per_week?.toString() || "",
-          shopping_per_month: data.shopping_per_month?.toString() || "",
-          culture_per_month: data.culture_per_month?.toString() || "",
-          residence_type: data.residence_type || "",
-          commute: data.commute,
-          summary_note: data.summary_note || "",
-        });
+          // formData에 기존 데이터 설정
+          setFormData({
+            monthly_spend_in_korea:
+              data.monthly_spend_in_korea?.toString() || "",
+            meal_frequency: data.meal_frequency || "",
+            dineout_per_week: data.dineout_per_week?.toString() || "",
+            coffee_per_week: data.coffee_per_week?.toString() || "",
+            smoking_per_day: data.smoking_per_day?.toString() || "",
+            drinking_per_week: data.drinking_per_week?.toString() || "",
+            shopping_per_month: data.shopping_per_month?.toString() || "",
+            culture_per_month: data.culture_per_month?.toString() || "",
+            residence_type: data.residence_type || "",
+            commute: data.commute,
+            summary_note: data.summary_note || "",
+          });
+        }
+
+        // 비용 데이터 조회
+        const summaryResponse = await getLedgerSummary();
+        if (summaryResponse.status === "success" && summaryResponse.data) {
+          setSummaryData(summaryResponse.data);
+          setCategoryData(summaryResponse.data.categories || []);
+        }
 
         setLoading(false);
       } catch (error) {
@@ -80,127 +80,6 @@ const AcctSummaryProfileEdit = () => {
 
     fetchProfileData();
   }, []);
-
-  // 임시로 넣었음 (실제로는 API: GET /summaries/ledger-summary/ 에서 받아올 데이터)
-  // API 응답: { average_monthly_living_expense, categories, base_dispatch_cost }
-  const summaryData = {
-    average_monthly_living_expense: {
-      foreign_amount: "2026.25",
-      foreign_currency: "USD",
-      krw_amount: "2634475",
-      krw_currency: "KRW",
-    },
-    base_dispatch_cost: {
-      flight: {
-        foreign_amount: "1200.00",
-        foreign_currency: "USD",
-        krw_amount: "1560000",
-        krw_currency: "KRW",
-      },
-      insurance: {
-        foreign_amount: "500.00",
-        foreign_currency: "USD",
-        krw_amount: "650000",
-        krw_currency: "KRW",
-      },
-      visa: {
-        foreign_amount: "160.00",
-        foreign_currency: "USD",
-        krw_amount: "208000",
-        krw_currency: "KRW",
-      },
-      tuition: {
-        foreign_amount: "3000.00",
-        foreign_currency: "USD",
-        krw_amount: "3900000",
-        krw_currency: "KRW",
-      },
-      total: {
-        foreign_amount: "4860.00",
-        foreign_currency: "USD",
-        krw_amount: "6318000",
-        krw_currency: "KRW",
-      },
-    },
-  };
-
-  //
-  // ————————————————————————————— 카테고리 —————————————————————————————
-
-  const categoryData = [
-    {
-      code: "FOOD",
-      label: "식비",
-      foreign_amount: 450.25,
-      foreign_currency: "USD",
-      krw_amount: 585325,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "HOUSING",
-      label: "주거비",
-      foreign_amount: 800.0,
-      foreign_currency: "USD",
-      krw_amount: 1040000,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "TRANSPORT",
-      label: "교통비",
-      foreign_amount: 120.5,
-      foreign_currency: "USD",
-      krw_amount: 156650,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "SHOPPING",
-      label: "쇼핑비",
-      foreign_amount: 200.0,
-      foreign_currency: "USD",
-      krw_amount: 260000,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "TRAVEL",
-      label: "여행비",
-      foreign_amount: 150.0,
-      foreign_currency: "USD",
-      krw_amount: 195000,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "STUDY_MATERIALS",
-      label: "교재비",
-      foreign_amount: 180.0,
-      foreign_currency: "USD",
-      krw_amount: 234000,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "ALLOWANCE",
-      label: "용돈",
-      foreign_amount: 50.0,
-      foreign_currency: "USD",
-      krw_amount: 65000,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-    {
-      code: "ETC",
-      label: "기타",
-      foreign_amount: 75.5,
-      foreign_currency: "USD",
-      krw_amount: 98150,
-      krw_currency: "KRW",
-      budget_diff: null,
-    },
-  ];
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -260,28 +139,14 @@ const AcctSummaryProfileEdit = () => {
       }
 
       // API 호출
-      // const response = await fetch('/summaries/snapshot/', {
-      //   method: 'PUT', // 또는 'PATCH' - 수정이므로
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${accessToken}`
-      //   },
-      //   body: JSON.stringify(requestData)
-      // });
-      //
-      // if (!response.ok) {
-      //   throw new Error('수정 실패');
-      // }
-      //
-      // const result = await response.json();
-
-      console.log("Updating data:", requestData);
-
-      // 성공 시 -> AcctSummaryPage로 돌아가기
-      navigate("/summaries/snapshot");
+      const response = await updateSnapshot(requestData);
+      if (response.status === "success") {
+        // 성공하면? AcctSummaryPage로 ㄱㄱ
+        navigate("/summaries/snapshot");
+      }
     } catch (error) {
       console.error("Error updating summary:", error);
-      alert("수정 중 오류가 발생했습니다.");
+      alert(error.message || "수정 중 오류가 발생했습니다.");
     }
   };
 
@@ -301,14 +166,40 @@ const AcctSummaryProfileEdit = () => {
       <ProfileBox>
         <ProfileImage>
           <Flag>
-            <img src="/images/flags/미국.png" alt="미국" />
+            <img
+              src={`/images/flags/${encodeURIComponent(
+                profile?.exchange_country || "미국"
+              )}.png`}
+              alt={profile?.exchange_country || "미국"}
+            />
           </Flag>
-          <Type>방문학생</Type>
+          <Type>
+            {profile?.exchange_type === "EX"
+              ? "교환학생"
+              : profile?.exchange_type === "VS"
+              ? "방문학생"
+              : profile?.exchange_type === "OT"
+              ? "기타"
+              : "방문학생"}
+          </Type>
         </ProfileImage>
         <ProfileInfo>
-          <p className="body1">화연이에연 / 여</p>
-          <h2>미국 University of California, Davis</h2>
-          <p className="body1">25년도 1학기 (5개월)</p>
+          <p className="body1">
+            {profile?.name || "사용자"} /{" "}
+            {profile?.gender === "M"
+              ? "남"
+              : profile?.gender === "F"
+              ? "여"
+              : "-"}
+          </p>
+          <h2>
+            {profile?.exchange_country || "미국"}{" "}
+            {profile?.exchange_university || "University of California, Davis"}
+          </h2>
+          <p className="body1">
+            {profile?.exchange_semester || "25년도 1학기"} (
+            {profile?.exchange_period || "5개월"})
+          </p>
         </ProfileInfo>
       </ProfileBox>
 
@@ -572,7 +463,7 @@ const AcctSummaryProfileEdit = () => {
         <Section2>
           <Section2Header>
             <TitleWrapper>
-              <Username>화연이에연</Username>
+              <Username>{profile?.name || "사용자"}</Username>
               <SectionTitle>님의 가계부 요약본</SectionTitle>
             </TitleWrapper>
             <Notice>* 기록시점의 환율 기준</Notice>
@@ -581,20 +472,22 @@ const AcctSummaryProfileEdit = () => {
             <CategorySection>
               <CategoryLabel>
                 <CategoryText>한달평균생활비</CategoryText>
-                <CategoryAmount>
-                  {summaryData.average_monthly_living_expense
-                    .foreign_currency === "KRW"
-                    ? "₩"
-                    : "$"}
-                  {parseFloat(
-                    summaryData.average_monthly_living_expense.foreign_amount
-                  ).toFixed(2)}{" "}
-                  (₩
-                  {parseFloat(
-                    summaryData.average_monthly_living_expense.krw_amount
-                  ).toLocaleString()}
-                  )
-                </CategoryAmount>
+                {summaryData && (
+                  <CategoryAmount>
+                    {summaryData.average_monthly_living_expense
+                      .foreign_currency === "KRW"
+                      ? "₩"
+                      : "$"}
+                    {parseFloat(
+                      summaryData.average_monthly_living_expense.foreign_amount
+                    ).toFixed(2)}{" "}
+                    (₩
+                    {parseFloat(
+                      summaryData.average_monthly_living_expense.krw_amount
+                    ).toLocaleString()}
+                    )
+                  </CategoryAmount>
+                )}
               </CategoryLabel>
               <CategoryGrid>
                 {categoryData.map((category) => (
@@ -606,50 +499,53 @@ const AcctSummaryProfileEdit = () => {
             <BasicCostSection>
               <BasicCostLabel>
                 <BasicCostText>기본파견비용</BasicCostText>
-                <BasicCostAmount>
-                  {summaryData.base_dispatch_cost.total.foreign_currency ===
-                  "KRW"
-                    ? "₩"
-                    : "$"}
-                  {parseFloat(
-                    summaryData.base_dispatch_cost.total.foreign_amount
-                  ).toFixed(2)}{" "}
-                  (₩
-                  {parseFloat(
-                    summaryData.base_dispatch_cost.total.krw_amount
-                  ).toLocaleString()}
-                  )
-                </BasicCostAmount>
+                {summaryData && (
+                  <BasicCostAmount>
+                    {summaryData.base_dispatch_cost.total.foreign_currency ===
+                    "KRW"
+                      ? "₩"
+                      : "$"}
+                    {parseFloat(
+                      summaryData.base_dispatch_cost.total.foreign_amount
+                    ).toFixed(2)}{" "}
+                    (₩
+                    {parseFloat(
+                      summaryData.base_dispatch_cost.total.krw_amount
+                    ).toLocaleString()}
+                    )
+                  </BasicCostAmount>
+                )}
               </BasicCostLabel>
               <BasicCostGrid>
-                {[
-                  {
-                    code: "flight",
-                    label: "항공권",
-                    ...summaryData.base_dispatch_cost.flight,
-                    budget_diff: null,
-                  },
-                  {
-                    code: "insurance",
-                    label: "보험료",
-                    ...summaryData.base_dispatch_cost.insurance,
-                    budget_diff: null,
-                  },
-                  {
-                    code: "visa",
-                    label: "비자",
-                    ...summaryData.base_dispatch_cost.visa,
-                    budget_diff: null,
-                  },
-                  {
-                    code: "tuition",
-                    label: "등록금",
-                    ...summaryData.base_dispatch_cost.tuition,
-                    budget_diff: null,
-                  },
-                ].map((cost) => (
-                  <CategoryCard key={cost.code} categoryData={cost} />
-                ))}
+                {summaryData &&
+                  [
+                    {
+                      code: "flight",
+                      label: "항공권",
+                      ...summaryData.base_dispatch_cost.flight,
+                      budget_diff: null,
+                    },
+                    {
+                      code: "insurance",
+                      label: "보험료",
+                      ...summaryData.base_dispatch_cost.insurance,
+                      budget_diff: null,
+                    },
+                    {
+                      code: "visa",
+                      label: "비자",
+                      ...summaryData.base_dispatch_cost.visa,
+                      budget_diff: null,
+                    },
+                    {
+                      code: "tuition",
+                      label: "등록금",
+                      ...summaryData.base_dispatch_cost.tuition,
+                      budget_diff: null,
+                    },
+                  ].map((cost) => (
+                    <CategoryCard key={cost.code} categoryData={cost} />
+                  ))}
               </BasicCostGrid>
             </BasicCostSection>
           </EntireGrid>
@@ -660,7 +556,7 @@ const AcctSummaryProfileEdit = () => {
           <Section3>
             <Section3Header>
               <TitleWrapper>
-                <Username>화연이에연</Username>
+                <Username>{profile?.name || "사용자"}</Username>
                 <SectionTitle>님이 남긴 한 마디</SectionTitle>
               </TitleWrapper>
               <OptionalNotice>* 선택입력</OptionalNotice>
@@ -701,7 +597,7 @@ export default AcctSummaryProfileEdit;
 
 const PageWrapper = styled.div`
   min-height: 100vh;
-  background: var(--white);
+  background: var(--white, #ffffff);
   padding-top: 5.5rem;
 `;
 
@@ -713,7 +609,7 @@ const ContentWrapper = styled.div`
 `;
 
 const Title = styled.h1`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 1.75rem;
   font-weight: 700;
   margin: 0 0 1.87rem 0;
@@ -750,7 +646,7 @@ const Flag = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--sub-btn);
+  background: var(--sub-btn, #f4f4f4);
   border-radius: 50%;
   overflow: hidden;
   flex: 0 0 auto;
@@ -776,7 +672,7 @@ const Type = styled.div`
   font-family: "Pretendard Variable";
   font-size: 0.85rem;
   font-weight: 400;
-  color: var(--white);
+  color: var(--white, #ffffff);
 `;
 
 const ProfileInfo = styled.div`
@@ -869,7 +765,7 @@ const Section = styled.section`
 `;
 
 const SectionTitle = styled.h2`
-  color: var(--black);
+  color: var(--black, #000);
   margin-left: 0.4rem;
   text-align: left;
 `;
@@ -898,7 +794,7 @@ const InputWrapper = styled.div`
 `;
 
 const Unit = styled.span`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 0.875rem;
   font-weight: 400;
   white-space: nowrap;
@@ -951,7 +847,7 @@ const EntireGrid = styled.section`
   align-items: center;
 
   border-radius: 0.625rem;
-  border: 1px solid var(--light-gray);
+  border: 1px solid var(--light-gray, #d9d9d9);
 
   margin: 0;
   width: 100%;
@@ -975,13 +871,13 @@ const CategoryLabel = styled.div`
 
 const CategoryText = styled.h2`
   white-space: nowrap;
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 1.7rem;
   font-weight: 700;
 `;
 
 const CategoryAmount = styled.span`
-  color: var(--deep-blue);
+  color: var(--deep-blue, #0b3e99);
   font-size: 1.7rem;
   font-weight: 700;
 `;
@@ -1020,14 +916,14 @@ const BasicCostLabel = styled.div`
 `;
 
 const BasicCostText = styled.h2`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 1.7rem;
   font-weight: 700;
   margin: 0;
 `;
 
 const BasicCostAmount = styled.span`
-  color: var(--deep-blue);
+  color: var(--deep-blue, #0b3e99);
   font-size: 1.7rem;
   font-weight: 700;
 `;
