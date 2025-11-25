@@ -27,6 +27,7 @@ const Feed = ({
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("token"));
   const [showModal, setShowModal] = React.useState(false);
+  const [isScrapLoading, setIsScrapLoading] = useState(false);
 
   // 로그인/로그아웃 상태 변화 감지하여 isLoggedIn 갱신
   useEffect(() => {
@@ -50,7 +51,7 @@ const Feed = ({
   useEffect(() => {
     setIsScrapped(scrapped);
   }, [scrapped]);
-  
+
   useEffect(() => {
     setScrapCount(scrap_count);
   }, [scrap_count]);
