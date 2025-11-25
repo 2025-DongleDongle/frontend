@@ -1,8 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-
+import { useProfile } from "../hooks";
 import NavTopbar from "../components/topbar/NavTopbar";
+import {
+  createLedgerItem,
+  updateLedgerItem,
+  deleteLedgerItem,
+  getDateLedgers,
+  getCategoryLedgers,
+  getThisMonthLedgers,
+  getTotalMonthLedgers,
+} from "../apis/ledgers/ledgers";
 import TransactionEdit from "../components/TransactionEdit";
 import TransactionItem from "../components/TransactionItem";
 import CategoryCard from "../components/CategoryCard";
@@ -11,6 +20,7 @@ import Button from "../components/button/SquareButton";
 
 const AccountbookPage = () => {
   const navigate = useNavigate();
+  const { profile } = useProfile();
 
   // 모달에서 사용할 TransactionEdit ref
   const editFormRef = React.useRef(null);
@@ -23,18 +33,124 @@ const AccountbookPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
 
-  // 거래 내역 리스트(..인데, 실제 사용 시 API에서 가져올거)
-  // API: GET /ledgers/date/ (일별 조회)
-  // API: GET /ledgers/category/ (카테고리별 조회)
+  // 거래 내역 리스트
   const [transactions, setTransactions] = useState([]);
-
-  // 선택된 월 (YYYY-MM 형식)
   const [selectedMonth, setSelectedMonth] = useState("2025-11");
-
-  // 가계부 요약본 게시 상태
   const [isSummaryPublished, setIsSummaryPublished] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // 이번달 수입/지출 데이터 (API: GET /ledgers/thisMonth/)
+  useEffect(() => {
+    fetchAllData();
+  }, [viewType, selectedMonth]);
+
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+
+      if (viewType === "daily") {
+        const dateResponse = await getDateLedgers();
+        if (dateResponse.status === "success" && dateResponse.data) {
+          // API 데이터 구조 그대로 저장
+          setDailyData(dateResponse.data);
+
+          const allTransactions = [];
+          dateResponse.data.forEach((monthData) => {
+            monthData.days?.forEach((dayData) => {
+              dayData.ledgers?.forEach((ledger) => {
+                allTransactions.push({
+                  id: ledger.ledger_id,
+                  entry_type: ledger.entry_type,
+                  date: ledger.date,
+                  payment_method: ledger.payment_method,
+                  category: ledger.category,
+                  amount: parseFloat(ledger.foreign_amount),
+                  currency_code: ledger.foreign_currency,
+                  amount_converted: parseFloat(ledger.krw_amount),
+                  converted_currency_code: ledger.krw_currency,
+                });
+              });
+            });
+          });
+          setTransactions(allTransactions);
+        }
+      } else {
+        const categoryResponse = await getCategoryLedgers();
+        if (categoryResponse.status === "success" && categoryResponse.data) {
+          const data = categoryResponse.data;
+
+          // 거래 내역 변환
+          const allTransactions = [];
+          data.categories?.forEach((categoryItem) => {
+            categoryItem.ledgers?.forEach((ledger) => {
+              allTransactions.push({
+                id: ledger.ledger_id,
+                entry_type: ledger.entry_type,
+                date: ledger.date,
+                payment_method: ledger.payment_method,
+                category: ledger.category,
+                amount: parseFloat(ledger.foreign_amount),
+                currency_code: ledger.foreign_currency,
+                amount_converted: parseFloat(ledger.krw_amount),
+                converted_currency_code: ledger.krw_currency,
+              });
+            });
+          });
+          setTransactions(allTransactions);
+          if (data.categories) {
+            setCategoryData(data.categories);
+          }
+          if (data.living_expense) {
+            setLivingExpense(data.living_expense);
+          }
+          if (data.living_expense_budget_diff) {
+            setLivingExpenseBudgetDiff(data.living_expense_budget_diff);
+          }
+          if (data.base_dispatch_cost) {
+            setBaseDispatchCost(data.base_dispatch_cost);
+          }
+        }
+      }
+
+      // 이번달 수입/지출 조회
+      const thisMonthResponse = await getThisMonthLedgers();
+      if (thisMonthResponse.status === "success" && thisMonthResponse.data) {
+        const data = thisMonthResponse.data;
+        setMonthlyExpense({
+          foreign_amount: parseFloat(data.expense?.foreign_amount || 0),
+          foreign_currency: data.expense?.foreign_currency || "USD",
+          krw_amount: parseFloat(data.expense?.krw_amount || 0),
+        });
+        setMonthlyIncome({
+          foreign_amount: parseFloat(data.income?.foreign_amount || 0),
+          foreign_currency: data.income?.foreign_currency || "USD",
+          krw_amount: parseFloat(data.income?.krw_amount || 0),
+        });
+      }
+
+      // 총기간 수입/지출 조회
+      const totalMonthResponse = await getTotalMonthLedgers();
+      if (totalMonthResponse.status === "success" && totalMonthResponse.data) {
+        const data = totalMonthResponse.data;
+        setTotalExpense({
+          foreign_amount: parseFloat(data.expense?.foreign_amount || 0),
+          foreign_currency: data.expense?.foreign_currency || "USD",
+          krw_amount: parseFloat(data.expense?.krw_amount || 0),
+        });
+        setTotalIncome({
+          foreign_amount: parseFloat(data.income?.foreign_amount || 0),
+          foreign_currency: data.income?.foreign_currency || "USD",
+          krw_amount: parseFloat(data.income?.krw_amount || 0),
+        });
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching ledger data:", error);
+      setLoading(false);
+    }
+  };
+
+  // 이번달 수입/지출 데이터
   const [monthlyExpense, setMonthlyExpense] = useState({
     foreign_amount: 0,
     foreign_currency: "USD",
@@ -46,7 +162,7 @@ const AccountbookPage = () => {
     krw_amount: 0,
   });
 
-  // 파견기간내 수입/지출 데이터 (API: GET /ledgers/totalMonth/)
+  // 파견기간내 수입/지출 데이터
   const [totalExpense, setTotalExpense] = useState({
     foreign_amount: 0,
     foreign_currency: "USD",
@@ -58,7 +174,7 @@ const AccountbookPage = () => {
     krw_amount: 0,
   });
 
-  // 기본파견비용 데이터 (API에서 받아올 데이터)
+  // 기본파견비용 데이터
   const [baseDispatchCost, setBaseDispatchCost] = useState({
     airfare: {
       foreign_amount: 0,
@@ -92,6 +208,14 @@ const AccountbookPage = () => {
     },
   });
 
+  // 카테고리
+  const [categoryData, setCategoryData] = useState([]);
+  const [livingExpense, setLivingExpense] = useState(null);
+  const [livingExpenseBudgetDiff, setLivingExpenseBudgetDiff] = useState(null);
+
+  // Daily
+  const [dailyData, setDailyData] = useState([]);
+
   const handleMonthPrev = () => {
     const [year, month] = selectedMonth.split("-").map(Number);
     const prevMonth = month === 1 ? 12 : month - 1;
@@ -124,49 +248,58 @@ const AccountbookPage = () => {
   };
 
   // API: POST /ledgers/fill/ (등록)
-  const handleRegisterTransaction = (data) => {
+  const handleRegisterTransaction = async (data) => {
     if (!data) {
       alert("모든 필수 항목을 입력해주세요.");
       return;
     }
 
-    // 실제 API 호출: POST /ledgers/fill/ (서버필요)
-    const newTransaction = {
-      ...data,
-      id: Date.now(), // 임시 ID (서버필요)
-      // 서버에서 계산해가지고 받아와야 하는데 API 연결 안돼서 걍 환율 아무렇게나 써놨음
-      amount_converted: data.amount * 1430, // 임시 환율
-      converted_currency_code: data.currency_code === "KRW" ? "USD" : "KRW",
-    };
-    setTransactions((prev) => [...prev, newTransaction]);
-
-    // 폼 초기화는 TransactionEdit 컴포넌트에서 처리
+    try {
+      const response = await createLedgerItem(data);
+      if (response.status === "success" && response.data) {
+        // 등록 성공 후 데이터 다시 가져오기
+        await fetchAllData();
+        alert("거래 내역이 등록되었습니다.");
+      }
+    } catch (error) {
+      console.error("Error creating ledger item:", error);
+      alert(error.message || "거래 내역 등록에 실패했습니다.");
+    }
   };
 
   // API: PUT /ledgers/fill/<int:ledger_id>/ (수정)
-  const handleSaveTransaction = (data) => {
+  const handleSaveTransaction = async (data) => {
     if (!data || !editingTransaction) return;
 
-    // 실제 API 호출: PUT /ledgers/fill/<int:ledger_id>/
-    // 서버에서 환산 데이터를 받아와야 하지만 임시로 계산
-    const updatedTransaction = {
-      ...data,
-      id: editingTransaction.id,
-      amount_converted: data.amount * 1430, // 임시 환율
-      converted_currency_code: data.currency_code === "KRW" ? "USD" : "KRW",
-    };
-
-    setTransactions((prev) =>
-      prev.map((t) => (t.id === editingTransaction.id ? updatedTransaction : t))
-    );
-    handleCloseModal();
+    try {
+      const response = await updateLedgerItem(editingTransaction.id, data);
+      if (response.status === "success") {
+        await fetchAllData();
+        handleCloseModal();
+      }
+    } catch (error) {
+      console.error("거래내역 수정 실패", error);
+    }
   };
 
   // API: DELETE /ledgers/fill/<int:ledger_id>/
-  const handleDeleteTransaction = (id) => {
+  const handleDeleteTransaction = async (id) => {
     if (!id) return;
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
-    handleCloseModal();
+
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+
+    try {
+      const response = await deleteLedgerItem(id);
+      if (response.status === "success") {
+        // 삭제 성공 후 데이터 다시 가져오기
+        await fetchAllData();
+        handleCloseModal();
+        alert("거래 내역이 삭제되었습니다.");
+      }
+    } catch (error) {
+      console.error("Error deleting ledger item:", error);
+      alert(error.message || "거래 내역 삭제에 실패했습니다.");
+    }
   };
 
   // 내 게시글 ㄱㄱ
@@ -177,15 +310,50 @@ const AccountbookPage = () => {
 
   // 일별 daily 뷰
   const renderDailyTransactions = () => {
-    // 실제 API 호출 시에는 dailyData 사용 ⭐
-    // API: GET /ledgers/date/
-    // const dailyData = API에서 받아온 데이터;
-    // API는 월별로 그룹화된 데이터를 반환: data = [{ month: "2025-11", days: [...] }, ...]
+    // API에서 받아온 dailyData 사용
+    if (dailyData && dailyData.length > 0) {
+      const monthData = dailyData.find((data) => data.month === selectedMonth);
 
-    // transactions를 날짜별로 묶어둠
+      if (!monthData || !monthData.days || monthData.days.length === 0) {
+        return null;
+      }
+
+      return monthData.days.map((dayData) => (
+        <DateGroup key={dayData.date}>
+          <DateHeader>
+            <DateDay>{new Date(dayData.date).getDate()}일</DateDay>
+            <DateWeekday>{dayData.weekday_ko}</DateWeekday>
+          </DateHeader>
+          <TransactionItemsWrapper>
+            {dayData.ledgers?.map((ledger) => {
+              const transaction = {
+                id: ledger.ledger_id,
+                entry_type: ledger.entry_type,
+                date: ledger.date,
+                payment_method: ledger.payment_method,
+                category: ledger.category,
+                amount: parseFloat(ledger.foreign_amount),
+                currency_code: ledger.foreign_currency,
+                amount_converted: parseFloat(ledger.krw_amount),
+                converted_currency_code: ledger.krw_currency,
+              };
+              return (
+                <TransactionItem
+                  key={ledger.ledger_id}
+                  transaction={transaction}
+                  onClick={() => handleOpenModal(transaction)}
+                />
+              );
+            })}
+          </TransactionItemsWrapper>
+        </DateGroup>
+      ));
+    }
+
+    // API 데이터 ㅌ 폴백: transactions를 날짜별로 묶어둠
     const grouped = {};
     transactions
-      .filter((t) => t.date && t.date.startsWith(selectedMonth)) // 선택된 ""월"" 데이터만 필터링
+      .filter((t) => t.date && t.date.startsWith(selectedMonth))
       .forEach((transaction) => {
         const date = transaction.date;
         if (!grouped[date]) {
@@ -222,11 +390,14 @@ const AccountbookPage = () => {
     ));
   };
 
-  // 카테고리별 집계 데이터 생성
-  const getCategoryData = () => {
-    // 실제 API 호출하면? API 데이터 걍 그대로 사용
-    // const categoryData = API에서 받아온 data.categories;
-    // 일단 임시로.. transactionsㄹ,ㄹ 카테고리별 집계해둠
+  // 카테고리별 데이터 반환 (선택된 월 필터링)
+  const getCategoryDataForMonth = () => {
+    // API에서 받아온 categoryData가 있으면 그거 쓰기
+    if (categoryData && categoryData.length > 0) {
+      return categoryData;
+    }
+
+    // API 데이터가 없으면? 로컬 집계로,, (폴백)
     const categoryMap = {};
     const categoryLabels = {
       FOOD: "식비",
@@ -241,7 +412,7 @@ const AccountbookPage = () => {
 
     transactions
       .filter((t) => t.entry_type === "EXPENSE")
-      .filter((t) => t.date && t.date.startsWith(selectedMonth)) // 선택된 월 필터링 추가
+      .filter((t) => t.date && t.date.startsWith(selectedMonth))
       .forEach((transaction) => {
         const category = transaction.category;
         if (!categoryMap[category]) {
@@ -252,7 +423,7 @@ const AccountbookPage = () => {
             foreign_currency: transaction.currency_code,
             krw_amount: 0,
             krw_currency: "KRW",
-            budget_diff: null, // API에서 받아온 예산 차이 데이터
+            budget_diff: null,
           };
         }
         categoryMap[category].foreign_amount += parseFloat(
@@ -268,9 +439,9 @@ const AccountbookPage = () => {
 
   // 카테고리별 뷰 렌더링
   const renderCategoryView = () => {
-    const categoryData = getCategoryData();
+    const displayCategoryData = getCategoryDataForMonth();
 
-    if (categoryData.length === 0) {
+    if (displayCategoryData.length === 0) {
       return (
         <EmptySection>
           <EmptyMessage>카테고리별 지출 내역이 없습니다.</EmptyMessage>
@@ -278,21 +449,27 @@ const AccountbookPage = () => {
       );
     }
 
-    // 실제 API 호출하면 주석 해제해서 쓰면댐
-    // const { living_expense, living_expense_budget_diff, categories, base_dispatch_cost } = API 데이터;
-    const totalSpent = categoryData.reduce(
-      (sum, cat) => sum + cat.foreign_amount,
-      0
-    );
-    const totalSpentKRW = categoryData.reduce(
-      (sum, cat) => sum + cat.krw_amount,
-      0
-    );
-    const foreignCurrency = categoryData[0]?.foreign_currency || "USD";
+    // API에서 받아온 생활비 데이터 사용하고 없으면 로컬 계산으로,,
+    const totalSpent = livingExpense?.foreign_amount
+      ? parseFloat(livingExpense.foreign_amount)
+      : displayCategoryData.reduce(
+          (sum, cat) => sum + parseFloat(cat.foreign_amount || 0),
+          0
+        );
+    const totalSpentKRW = livingExpense?.krw_amount
+      ? parseFloat(livingExpense.krw_amount)
+      : displayCategoryData.reduce(
+          (sum, cat) => sum + parseFloat(cat.krw_amount || 0),
+          0
+        );
+    const foreignCurrency =
+      livingExpense?.foreign_currency ||
+      displayCategoryData[0]?.foreign_currency ||
+      "USD";
 
     return (
       <>
-        {/* 이번달 생활비 섹션 */}
+        {/* 이번달 생활비 */}
         <CategoryHeader>
           <CategoryTitle>이번달 생활비</CategoryTitle>
           <CategoryAmount>
@@ -301,14 +478,27 @@ const AccountbookPage = () => {
           </CategoryAmount>
         </CategoryHeader>
 
-        {/* 예산대비 메시지는 API 명ㄱ결을 해야해(API에서 living_expense_budget_diff 사용) */}
-        {/* <BudgetMessage>
-          예산대비: {foreignCurrency === "KRW" ? "₩" : "$"}{budget_diff} 더 적게 썼어요!
-        </BudgetMessage> */}
+        {/* 예산 차이 메시지 */}
+        {livingExpenseBudgetDiff && (
+          <BudgetMessage>
+            예산대비
+            <BudgetMessageAmount>
+              {" "}
+              {livingExpenseBudgetDiff.foreign_currency === "KRW" ? "₩" : "$"}
+              {Math.abs(
+                parseFloat(livingExpenseBudgetDiff.foreign_amount)
+              ).toFixed(2)}{" "}
+              {parseFloat(livingExpenseBudgetDiff.foreign_amount) >= 0
+                ? "더 적게"
+                : "더 많이"}{" "}
+            </BudgetMessageAmount>
+            썼어요!
+          </BudgetMessage>
+        )}
 
         {/* 카테고리별 카드 */}
         <CategoryCardsGrid>
-          {categoryData.map((category) => (
+          {displayCategoryData.map((category) => (
             <CategoryCard key={category.code} categoryData={category} />
           ))}
         </CategoryCardsGrid>
@@ -352,13 +542,6 @@ const AccountbookPage = () => {
             ))}
           </BasicCostGrid>
         </BasicCostSection>
-        {/* 기본파견비용도 API 가 필요(아마? API에서 base_dispatch_cost 사용) */}
-        {/* <BaseCostSection>
-          <BaseCostTitle>기본파견비용</BaseCostTitle>
-          <BaseCostGrid>
-            요기 항공권, 보험료, 비자, 등록금 카드 표시
-          </BaseCostGrid>
-        </BaseCostSection> */}
       </>
     );
   };
@@ -390,8 +573,8 @@ const AccountbookPage = () => {
                         width: 100%;
                         height: 2.53125rem;
                         border-radius: 0.52734375rem;
-                        background: var(--light-gray);
-                        color: var(--black);
+                        background: var(--light-gray, #d9d9d9);
+                        color: var(--black, #000);
                         font-size: 0.925rem;
                         font-weight: 500;
                       `}
@@ -404,8 +587,8 @@ const AccountbookPage = () => {
                         width: 100%;
                         height: 2.53125rem;
                         border-radius: 0.52734375rem;
-                        background: var(--blue);
-                        color: var(--white);
+                        background: var(--blue, #115bca);
+                        color: var(--white, #ffffff);
                         font-size: 0.925rem;
                         font-weight: 500;
                       `}
@@ -437,7 +620,7 @@ const AccountbookPage = () => {
                   >
                     <path
                       d="M15 5L8 12.5L15 20"
-                      stroke="var(--gray)"
+                      stroke="var(--gray, #a5a5a5)"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -459,7 +642,7 @@ const AccountbookPage = () => {
                   >
                     <path
                       d="M10 20L17 12.5L10 5"
-                      stroke="var(--gray)"
+                      stroke="var(--gray, #a5a5a5)"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -475,13 +658,13 @@ const AccountbookPage = () => {
               width: 5.625rem;
               height: 2.484375rem;
               background: ${
-                viewType === "daily" ? "var(--blue)" : "var(--white)"
+                viewType === "daily" ? "var(--blue, #115bca)" : "var(--white, #ffffff)"
               };
-              color: ${viewType === "daily" ? "var(--white)" : "var(--black)"};
+              color: ${viewType === "daily" ? "var(--white, #ffffff)" : "var(--black, #000)"};
               border: ${
                 viewType === "daily"
                   ? "none"
-                  : "0.046875rem solid var(--light-gray)"
+                  : "0.046875rem solid var(--light-gray, #d9d9d9)"
               };
               font-size: 0.925rem;
             `}
@@ -494,15 +677,15 @@ const AccountbookPage = () => {
               width: 5.625rem;
               height: 2.484375rem;
               background: ${
-                viewType === "category" ? "var(--blue)" : "var(--white)"
+                viewType === "category" ? "var(--blue, #115bca)" : "var(--white, #ffffff)"
               };
               color: ${
-                viewType === "category" ? "var(--white)" : "var(--black)"
+                viewType === "category" ? "var(--white, #ffffff)" : "var(--black, #000)"
               };
               border: ${
                 viewType === "category"
                   ? "none"
-                  : "0.046875rem solid var(--light-gray)"
+                  : "0.046875rem solid var(--light-gray, #d9d9d9)"
               };
               font-size: 0.925rem;
             `}
@@ -531,7 +714,7 @@ const AccountbookPage = () => {
 
           {/* ————————————————————————————— 사이드(?) ————————————————————————————— */}
           <Sidebar>
-            {/* ""이번 달"" - API: GET /ledgers/thisMonth/ */}
+            {/* 이번달 수입/지출 */}
             <SummaryCard>
               <SummaryTitle>이번달 수입/지출</SummaryTitle>
               <SummaryContent>
@@ -562,7 +745,7 @@ const AccountbookPage = () => {
               </SummaryContent>
             </SummaryCard>
 
-            {/* ""파견기간"" 내에서.. - API: GET /ledgers/totalMonth/ */}
+            {/* 파견기간내 수입/지출 */}
             <SummaryCard>
               <SummaryTitle>파견기간내 수입/지출</SummaryTitle>
               <SummaryContent>
@@ -606,8 +789,8 @@ const AccountbookPage = () => {
               font-size: 1.125rem;
               background: ${
                 transactions.length === 0 || isSummaryPublished
-                  ? "var(--gray)"
-                  : "var(--blue)"
+                  ? "var(--gray, #a5a5a5)"
+                  : "var(--blue, #115bca)"
               };
             `}
               >
@@ -623,7 +806,7 @@ const AccountbookPage = () => {
               padding: 1.078125rem 1.5rem;
               border-radius: 0.97744rem;
               font-size: 1.125rem;
-              background: ${isSummaryPublished ? "var(--blue)" : "var(--gray)"};
+              background: ${isSummaryPublished ? "var(--blue, #115bca)" : "var(--gray, #a5a5a5)"};
             `}
               >
                 <span className="h3">내 게시글 바로가기</span>
@@ -651,7 +834,7 @@ const PageContainer = styled.div`
 const PageTitle = styled.h2`
   width: 100%;
   max-width: calc(38rem + 2rem + 16rem);
-  color: var(--black);
+  color: var(--black, #000);
   text-align: left;
   margin-bottom: 1.5rem;
 `;
@@ -672,7 +855,7 @@ const MainContent = styled.div`
   gap: 1.5rem;
   width: 100%;
   h2 {
-    color: var(--black);
+    color: var(--black, #000);
     text-align: left;
     margin-bottom: 0.5rem;
   }
@@ -681,9 +864,9 @@ const MainContent = styled.div`
 const TransactionEditContainer = styled.div`
   width: 100%;
   padding: 1rem 0.88rem 1rem 0.88rem;
-  border: 1px solid var(--light-gray);
+  border: 1px solid var(--light-gray, #d9d9d9);
   border-radius: 1.078125rem;
-  background: var(--white);
+  background: var(--white, #ffffff);
 `;
 
 const DateSelector = styled.div`
@@ -716,7 +899,7 @@ const DateButton = styled.button`
 
 const DateDisplay = styled.div`
   h2 {
-    color: var(--black);
+    color: var(--black, #000);
     margin: 0;
   }
 `;
@@ -740,12 +923,12 @@ const TransactionList = styled.div`
 
   padding: 2rem;
   border-radius: 0.97744rem;
-  border: 1px solid var(--light-gray);
-  background: var(--white);
+  border: 1px solid var(--light-gray, #d9d9d9);
+  background: var(--white, #ffffff);
 `;
 
 const EmptyMessage = styled.p`
-  color: var(--gray);
+  color: var(--gray, #a5a5a5);
   font-size: 1.125rem;
   font-weight: 400;
 `;
@@ -766,16 +949,17 @@ const SummaryCard = styled.div`
   gap: 1rem;
 
   border-radius: 0.97744rem;
-  border: 1px solid var(--light-gray);
-  background: var(--white);
+  border: 1px solid var(--light-gray, #d9d9d9);
+  background: var(--white, #ffffff);
 `;
 
 const SummaryTitle = styled.h2`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 1.3125rem;
   font-weight: 700;
   text-align: left;
   margin-bottom: 1rem;
+  white-space: nowrap;
 `;
 
 const SummaryContent = styled.div`
@@ -789,7 +973,7 @@ const SummaryRow = styled.div`
 `;
 
 const SummaryLabel = styled.span`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 1.125rem;
   font-weight: 560;
   text-align: left;
@@ -806,13 +990,13 @@ const SummaryValues = styled.div`
 
 const SummaryValue = styled.span`
   color: ${({ $type }) =>
-    $type === "income" ? "var(--blue)" : "var(--black)"};
+    $type === "income" ? "var(--blue, #115bca)" : "var(--black, #000)"};
   font-size: 1.125rem;
   font-weight: 700;
 `;
 
 const SummarySubValue = styled.span`
-  color: var(--gray);
+  color: var(--gray, #a5a5a5);
   font-size: 0.925rem;
   font-weight: 500;
 `;
@@ -849,13 +1033,13 @@ const DateHeader = styled.div`
 `;
 
 const DateDay = styled.span`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 0.925rem;
   font-weight: 700;
 `;
 
 const DateWeekday = styled.span`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 0.925rem;
   font-weight: 500;
 `;
@@ -866,7 +1050,7 @@ const TransactionItemsWrapper = styled.div`
   flex-direction: column;
   border-radius: 0.792rem;
   overflow: hidden;
-  background: var(--white);
+  background: var(--white, #ffffff);
   gap: 0.5rem;
 `;
 
@@ -875,8 +1059,8 @@ const CategoryViewContainer = styled.div`
   min-height: 30rem;
   padding: 2rem;
   border-radius: 0.97744rem;
-  border: 1px solid var(--light-gray);
-  background: var(--white);
+  border: 1px solid var(--light-gray, #d9d9d9);
+  background: var(--white, #ffffff);
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -891,17 +1075,29 @@ const CategoryHeader = styled.div`
 `;
 
 const CategoryTitle = styled.h2`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 1.7rem;
   font-weight: 700;
   margin: 0;
 `;
 
 const CategoryAmount = styled.span`
-  color: var(--blue);
+  color: var(--blue, #115bca);
   font-size: 1.7rem;
   font-weight: 700;
   margin-bottom: 0.4rem;
+`;
+
+const BudgetMessage = styled.div`
+  color: var(--black, #000);
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-align: center;
+  margin: -1rem 0 0.5rem 0;
+`;
+
+const BudgetMessageAmount = styled.span`
+  color: var(--deep-blue, #0b3e99);
 `;
 
 const CategoryCardsGrid = styled.div`
@@ -929,14 +1125,14 @@ const BasicCostHeader = styled.div`
 `;
 
 const BasicCostTitle = styled.h2`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 1.7rem;
   font-weight: 700;
   margin: 0;
 `;
 
 const BasicCostAmount = styled.span`
-  color: var(--deep-blue);
+  color: var(--deep-blue, #0b3e99);
   font-size: 1.7rem;
   font-weight: 700;
 `;
@@ -945,7 +1141,7 @@ const BasicCostGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
-  padding: 0 ;
+  padding: 0;
   width: 100%;
 `;
 
@@ -973,7 +1169,7 @@ const ModalOverlay = styled.div`
 const ModalContent = styled.div`
   max-width: 40rem;
   padding: 1rem 1.0625rem 1.5rem 1.0625rem;
-  background: var(--white);
+  background: var(--white, #ffffff);
   border-radius: 0.97744rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 `;
