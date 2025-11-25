@@ -289,6 +289,12 @@ const CategoryCard = ({ categoryData }) => {
           <SecondaryAmount>
             {formatAmount(categoryData.krw_amount)}원
           </SecondaryAmount>
+          {categoryData.current_rate_krw_amount && (
+            <CurrentAmount>
+              *현재 환율 기준: ₩
+              {formatAmount(categoryData.current_rate_krw_amount)}
+            </CurrentAmount>
+          )}
         </AmountSection>
 
         <BudgetStatus $isOver={isOverBudget} $hasNoBudget={hasNoBudget}>
@@ -314,8 +320,8 @@ const Card = styled.div`
   padding: 0.7rem 1.7rem;
 
   border-radius: 0.625rem;
-  border: 1px solid var(--light-gray);
-  background: var(--white);
+  border: 1px solid var(--light-gray, #d9d9d9);
+  background: var(--white, #ffffff);
 
   transition: all 0.2s;
 
@@ -342,7 +348,7 @@ const IconWrapper = styled.div`
   align-items: center;
   justify-content: center;
   margin: 0.4rem 0 0 0.7rem;
-  color: var(--deep-blue);
+  color: var(--deep-blue, #0b3e99);
 
   svg {
     width: 100%;
@@ -351,11 +357,11 @@ const IconWrapper = styled.div`
 `;
 
 const CategoryName = styled.h3`
-  color: var(--black);
+  color: var(--black, #000);
   font-size: 1rem;
   font-weight: 600;
   margin-right: 0.5rem;
-  color: var(--deep-blue);
+  color: var(--deep-blue, #0b3e99);
 `;
 
 const CardBody = styled.div`
@@ -372,22 +378,33 @@ const AmountSection = styled.div`
 `;
 
 const PrimaryAmount = styled.span`
-  color: var(--deep-blue);
+  color: var(--deep-blue, #0b3e99);
   font-size: 1.25rem;
   font-weight: 700;
   text-align: center;
 `;
 
 const SecondaryAmount = styled.span`
-  color: var(--gray);
+  color: var(--gray, #a5a5a5);
   font-size: 0.875rem;
   font-weight: 500;
   text-align: center;
 `;
 
+const CurrentAmount = styled.span`
+  font-size: 0.65625rem;
+  font-weight: 400;
+  color: var(--black, #000);
+  text-align: center;
+`;
+
 const BudgetStatus = styled.p`
   color: ${({ $isOver, $hasNoBudget }) =>
-    $hasNoBudget ? "var(--gray)" : $isOver ? "var(--red)" : "#22c55e"};
+    $hasNoBudget
+      ? "var(--gray, #a5a5a5)"
+      : $isOver
+      ? "var(--red, #ca1111)"
+      : "#22c55e"};
   font-size: 0.57069rem;
   font-weight: 500;
   text-align: center;
