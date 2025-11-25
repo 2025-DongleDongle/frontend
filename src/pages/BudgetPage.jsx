@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Inputfield from "../components/Inputfield";
 import Dropdown from "../components/Dropdown";
 import SquareButton from "../components/button/SquareButton";
+import { BudgetAPI } from "@/apis";
 
 const BudgetInputStyle = {
   width: "21.91256rem",
@@ -11,6 +12,10 @@ const BudgetInputStyle = {
 
 const SpendingInputStyle = {
   background: "var(--white)",
+}
+
+const LivingInputStyle = {
+  paddingRight: "2rem",
 }
 
 const moneyOption = [
@@ -206,13 +211,17 @@ const BudgetPage = () => {
             </div>
             <span className="body1 red" >* 미국 캘리포니아의 평균 교통비는 10만원, 식비는 50만원 입니다. (1달 기준)</span>
           </TitleBox>
-          <Inputfield 
-            ref={(el) => (inputRefs.current[budgetItems.length] = el)}
-            value={budgetValues["monthlyLiving"] || ""}
-            onChange={handleBudgetChange("monthlyLiving")}
-            onKeyDown={handleKeyDown(budgetItems.length)}
-            placeholder="금액 입력"
-          />
+          <CostInput>
+            <Inputfield 
+              ref={(el) => (inputRefs.current[budgetItems.length] = el)}
+              value={budgetValues["monthlyLiving"] || ""}
+              onChange={handleBudgetChange("monthlyLiving")}
+              onKeyDown={handleKeyDown(budgetItems.length)}
+              placeholder="금액 입력"
+              customStyle={LivingInputStyle}
+            />
+            <span className="body1">원</span>
+          </CostInput>
           <span className="body1 title2">세부 지출 계획 항목</span> 
           <Flex>
             {spendingItems.map((item, index) => {
@@ -225,13 +234,17 @@ const BudgetPage = () => {
                     defaultValue={item.title} 
                     readOnly
                   />
-                  <Inputfield 
-                    ref={(el) => (inputRefs.current[amountIndex] = el)}
-                    value={budgetValues[item.id] || ""}
-                    onChange={handleBudgetChange(item.id)}
-                    onKeyDown={handleKeyDown(amountIndex)}
-                    placeholder="금액 입력"
-                  />
+                  <CostInput>
+                    <Inputfield 
+                      ref={(el) => (inputRefs.current[amountIndex] = el)}
+                      value={budgetValues[item.id] || ""}
+                      onChange={handleBudgetChange(item.id)}
+                      onKeyDown={handleKeyDown(amountIndex)}
+                      placeholder="금액 입력"
+                      customStyle={LivingInputStyle}
+                    />
+                    <span className="body1">원</span>
+                  </CostInput>
                 </Box2>
               );
             })}
@@ -249,13 +262,17 @@ const BudgetPage = () => {
                     onKeyDown={handleKeyDown(nameIndex)}
                     placeholder="항목 입력"
                   />
-                  <Inputfield 
-                    ref={(el) => (inputRefs.current[amountIndex] = el)}
-                    value={budgetValues[item.id] || ""}
-                    onChange={handleBudgetChange(item.id)}
-                    onKeyDown={handleKeyDown(amountIndex)}
-                    placeholder="금액 입력"
-                  />
+                  <CostInput>
+                    <Inputfield 
+                      ref={(el) => (inputRefs.current[amountIndex] = el)}
+                      value={budgetValues[item.id] || ""}
+                      onChange={handleBudgetChange(item.id)}
+                      onKeyDown={handleKeyDown(amountIndex)}
+                      placeholder="금액 입력"
+                      customStyle={LivingInputStyle}
+                    />
+                    <span className="body1">원</span>
+                  </CostInput>
                 </Box2>
               );
             })}
@@ -414,6 +431,18 @@ const TitleBox = styled.div`
 
   .red {
     color: var(--red);
+  }
+`
+
+const CostInput = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  position: relative;
+  
+  span.body1{
+    position: absolute;
+    right: 1rem;
   }
 `
 
