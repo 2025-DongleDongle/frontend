@@ -46,11 +46,11 @@ const Feed = ({
   // 항상 최신 is_scraped 값을 반영하도록 상태를 동기화
   const [isScrapped, setIsScrapped] = useState(scrapped);
   const [scrapCount, setScrapCount] = useState(scrap_count);
-  const [isScrapLoading, setIsScrapLoading] = useState(false);
 
   useEffect(() => {
     setIsScrapped(scrapped);
   }, [scrapped]);
+  
   useEffect(() => {
     setScrapCount(scrap_count);
   }, [scrap_count]);
