@@ -169,7 +169,7 @@ const ProfilePage = () => {
                 <h3>파견 국가</h3>
                 <SearchDropdown
                   options={countryList}
-                  value={editData.exchange_country?.value ?? ""}
+                  value={editData.exchange_country?.value}
                   searchPlaceholder="파견 국가를 검색하세요"
                   onSelect={handleDropdownSelect("exchange_country")}
                   customStyle={profileInputStyle}
@@ -179,7 +179,7 @@ const ProfilePage = () => {
                 <h3>파견 유형</h3>
                 <Dropdown
                   options={typeList}
-                  value={editData.exchange_type?.value ?? ""}
+                  value={editData.exchange_type?.value}
                   onSelect={handleDropdownSelect("exchange_type")}
                   customStyle={profileInputStyle}
                 />
@@ -188,7 +188,7 @@ const ProfilePage = () => {
                 <h3>파견 학교</h3>
                 <SearchDropdown
                   options={exUnivList}
-                  value={editData.exchange_university?.value ?? ""}
+                  value={editData.exchange_university?.value}
                   searchPlaceholder="파견 학교를 검색하세요"
                   onSelect={handleDropdownSelect("exchange_university")}
                   customStyle={profileInputStyle}
