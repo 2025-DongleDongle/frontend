@@ -35,7 +35,13 @@ const AccountbookPage = () => {
 
   // 거래 내역 리스트
   const [transactions, setTransactions] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState("2025-11");
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    // 하드코딩했던 것 삭제함
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    return `${year}-${month}`;
+  });
   const [isSummaryPublished, setIsSummaryPublished] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -49,7 +55,7 @@ const AccountbookPage = () => {
 
       if (viewType === "daily") {
         const dateResponse = await getDateLedgers();
-        if (dateResponse.status === "success" && dateResponse.data) {
+        if (dateResponse && dateResponse.data) {
           // API 데이터 구조 그대로 저장
           setDailyData(dateResponse.data);
 
@@ -75,7 +81,7 @@ const AccountbookPage = () => {
         }
       } else {
         const categoryResponse = await getCategoryLedgers();
-        if (categoryResponse.status === "success" && categoryResponse.data) {
+        if (categoryResponse && categoryResponse.data) {
           const data = categoryResponse.data;
 
           // 카테고리별 조회 시 → 거래내역이 : 개별로는 X, 덩어리(?)로만 O / transactions는 기존 데이터 유지
@@ -96,7 +102,7 @@ const AccountbookPage = () => {
 
       // 이번달
       const thisMonthResponse = await getThisMonthLedgers();
-      if (thisMonthResponse.status === "success" && thisMonthResponse.data) {
+      if (thisMonthResponse && thisMonthResponse.data) {
         const data = thisMonthResponse.data;
         setMonthlyExpense({
           foreign_amount: parseFloat(data.expense?.foreign_amount || 0),
@@ -112,7 +118,7 @@ const AccountbookPage = () => {
 
       // 총기간
       const totalMonthResponse = await getTotalMonthLedgers();
-      if (totalMonthResponse.status === "success" && totalMonthResponse.data) {
+      if (totalMonthResponse && totalMonthResponse.data) {
         const data = totalMonthResponse.data;
         setTotalExpense({
           foreign_amount: parseFloat(data.expense?.foreign_amount || 0),
@@ -128,7 +134,7 @@ const AccountbookPage = () => {
 
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching ledger data:", error);
+      console.error("거래내역 조회 실패", error);
       setLoading(false);
     }
   };
@@ -231,13 +237,12 @@ const AccountbookPage = () => {
 
     try {
       const response = await createLedgerItem(data);
-      if (response.status === "success" && response.data) {
+      if (response && response.data) {
+        // 등록 성공 후 데이터 다시 가져오기
         await fetchAllData();
-        alert("거래 내역이 등록되었습니다.");
       }
     } catch (error) {
-      console.error("Error creating ledger item:", error);
-      alert(error.message || "거래 내역 등록에 실패했습니다.");
+      console.error("거래내역 등록 실패", error);
     }
   };
 
@@ -247,7 +252,7 @@ const AccountbookPage = () => {
 
     try {
       const response = await updateLedgerItem(editingTransaction.id, data);
-      if (response.status === "success") {
+      if (response && response.data) {
         await fetchAllData();
         handleCloseModal();
       }
@@ -260,19 +265,15 @@ const AccountbookPage = () => {
   const handleDeleteTransaction = async (id) => {
     if (!id) return;
 
-    if (!window.confirm("정말 삭제하시겠습니까?")) return;
-
     try {
       const response = await deleteLedgerItem(id);
-      if (response.status === "success") {
+      if (response) {
         // 삭제 성공 후 데이터 다시 가져오기
         await fetchAllData();
         handleCloseModal();
-        alert("거래 내역이 삭제되었습니다.");
       }
     } catch (error) {
-      console.error("Error deleting ledger item:", error);
-      alert(error.message || "거래 내역 삭제에 실패했습니다.");
+      console.error("거래내역 삭제 실패", error);
     }
   };
 
@@ -289,7 +290,7 @@ const AccountbookPage = () => {
       const monthData = dailyData.find((data) => data.month === selectedMonth);
 
       if (!monthData || !monthData.days || monthData.days.length === 0) {
-        return null;
+        return <EmptyMessage>이번 달 거래 내역이 없습니다.</EmptyMessage>;
       }
 
       return monthData.days.map((dayData) => (
@@ -344,6 +345,10 @@ const AccountbookPage = () => {
     const sortedDates = Object.keys(grouped).sort(
       (a, b) => new Date(b) - new Date(a)
     );
+
+    if (sortedDates.length === 0) {
+      return <EmptyMessage>거래 내역이 없습니다.</EmptyMessage>;
+    }
 
     return sortedDates.map((date) => (
       <DateGroup key={date}>
@@ -681,8 +686,8 @@ const AccountbookPage = () => {
             {/* 가계부 내역.. 인데 없으면 뭐라고 할 지 딱히 안적어두셔서 */}
             {viewType === "daily" ? (
               <TransactionList>
-                {transactions.length === 0 ? (
-                  <EmptyMessage>거래 내역이 없습니다.</EmptyMessage>
+                {loading ? (
+                  <EmptyMessage>로딩 중...</EmptyMessage>
                 ) : (
                   <DailyViewContainer>
                     {renderDailyTransactions()}
