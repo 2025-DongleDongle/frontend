@@ -5,6 +5,9 @@ import Inputfield from "../components/Inputfield";
 import Dropdown from "../components/Dropdown";
 import SquareButton from "../components/button/SquareButton";
 import { BudgetAPI } from "@/apis";
+import {currencyDropdownOptions} from "@/utils/currencySymbolMap";
+
+const MAX_INT = 2147483647;
 
 const BudgetInputStyle = {
   width: "21.91256rem",
@@ -18,14 +21,9 @@ const LivingInputStyle = {
   paddingRight: "2rem",
 }
 
-const moneyOption = [
-  { label: "원화 (₩)", value: "krw" },
-  { label: "달러 ($)", value: "usd" }
-]
-
 const budgetItems = [
   {
-    id: "flight",
+    id: "FLIGHT",
     title: "항공권",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="21" viewBox="0 0 18 21" fill="none">
@@ -35,7 +33,7 @@ const budgetItems = [
     message: "* 항공권 평균 170만원"
   },
   {
-    id: "insurance",
+    id: "INSURANCE",
     title: "보험료",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -52,7 +50,7 @@ const budgetItems = [
     message: "* 보험료 평균 20만원"
   },
   {
-    id: "visa",
+    id: "VISA",
     title: "비자",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" viewBox="0 0 27 27" fill="none">
@@ -69,7 +67,7 @@ const budgetItems = [
     message: "* 항공권 평균 25만원"
   },
   {
-    id: "tuition",
+    id: "TUITION",
     title: "등록금",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -82,27 +80,27 @@ const budgetItems = [
 
 const spendingItems = [
   {
-    id: "food",
+    id: "FOOD",
     title: "식비"
   },
   {
-    id: "housing",
+    id: "HOUSING",
     title: "주거비"
   },
   {
-    id: "transportation",
+    id: "TRANSPORT",
     title: "교통비"
   },
   {
-    id: "shopping",
+    id: "SHOPPING",
     title: "쇼핑비"
   },
   {
-    id: "travel",
+    id: "TRAVEL",
     title: "여행비"
   },
   {
-    id: "textbook",
+    id: "STUDY_MATERIALS",
     title: "교재비"
   },
 ]
@@ -110,7 +108,108 @@ const spendingItems = [
 const BudgetPage = () => {
   const [budgetValues, setBudgetValues] = useState({});
   const [customSpendingItems, setCustomSpendingItems] = useState([]);
+  const [currencyValues, setCurrencyValues] = useState({});
+
+  useEffect(() => {
+    const loadBudget = async () => {
+      try {
+        const data = await BudgetAPI.getBudget();
+
+        if (!data || !data.base_budget) return;
+
+        const baseItems = data.base_budget.items;
+        const livingItems = data.living_budget.items;
+
+        // 기본 예산 금액 + 화폐단위 초기화
+        const newBudgetValues = {};
+        const newCurrencyValues = {};
+
+        baseItems.forEach(item => {
+          newBudgetValues[item.type] = Number(item.amount).toLocaleString();
+          newCurrencyValues[item.type] = item.currency;
+        });
+
+        //생활비 total_amount
+        newBudgetValues["monthlyLiving"] = Number(data.living_budget.total_amount).toLocaleString();
+
+        //생활비 기본 + 커스텀 금액 초기화
+        const newCustom = [];
+
+        livingItems.forEach(item => {
+          if (item.type === "ETC") {
+            newCustom.push({
+              title: item.custom_name,
+              isNew: false,
+            });
+            newBudgetValues[`CUSTOM_${newCustom.length - 1}`] = Number(item.amount).toLocaleString();
+          } else {
+            newBudgetValues[item.type] = Number(item.amount).toLocaleString();
+          }
+        });
+
+        setBudgetValues(newBudgetValues);
+        setCurrencyValues(newCurrencyValues);
+        setCustomSpendingItems(newCustom);
+
+      } catch (error) {
+        console.log("예산 조회 실패 (초기 생성 상태일 수 있음)");
+      }
+    };
+
+    loadBudget();
+  }, []);
+
   const inputRefs = useRef([]);
+
+  const createPayload = () => {
+    const raw = getRawValues();
+
+    const baseItems = budgetItems.map(item => ({
+      type: item.id,
+      amount: Number(raw[item.id] ?? 0),
+      currency: currencyValues[item.id] || "KRW",
+    }));
+
+    const spendingDefault = spendingItems.map(item => ({
+      type: item.id,
+      amount: Number(raw[item.id] ?? 0),
+    }));
+
+    const spendingCustom = customSpendingItems.map((item, index) => ({
+      //id: item.id,                      // 기존 항목은 숫자, 새 항목은 null
+      type: "ETC",
+      custom_name: item.title,
+      amount: Number(raw[`CUSTOM_${index}`] || 0),
+    }));
+
+    return {
+      base_budget: {
+        items: baseItems,
+      },
+      living_budget: {
+        total_amount: Number(raw["monthlyLiving"] ?? 0),
+        items: [...spendingDefault, ...spendingCustom],
+      },
+    };
+  };
+
+  const onClick = async () => {
+    const payload = createPayload();
+
+    try {
+      // 1) GET이 성공하면 예산이 존재하므로 → PUT 업데이트
+      await BudgetAPI.getBudget();
+      const res = await BudgetAPI.updateBudget(payload);
+    } catch (e) {
+      // 2) GET 실패 → 예산 없음 → POST 생성
+      try {
+        const res = await BudgetAPI.createBudget(payload);
+      } catch (e2) {
+        console.error("예산 생성 실패:", e2);
+        alert("예산 저장 중 오류가 발생했습니다.");
+      }
+    }
+  };
 
   const handleBudgetChange = (itemId) => (e) => {
     const value = e.target.value;
@@ -118,38 +217,53 @@ const BudgetPage = () => {
     if (/^[\d,\.]*$/.test(value)) {
       // 콤마 제거 후 숫자만 추출
       const numericValue = value.replace(/,/g, '');
-      
+      // 숫자로 변환
+      const numberVal = Number(numericValue);
+      // 소수점 앞자리 6자리 이하 체크
+      const integerPart = numericValue.split('.')[0];
+      if (integerPart.length > 6) {
+        alert("금액의 정수부는 최대 6자리(999,999)까지 입력 가능합니다.");
+        return;
+      }
+      // 값이 너무 크면 업데이트 막기
+      if (numberVal > MAX_INT) {
+        alert("최대 입력 가능 금액은 2,147,483,647원입니다.");
+        return;
+      }
       // 소수점 처리: 소수점이 있으면 정수부와 소수부 분리
       const parts = numericValue.split('.');
-      
       // 정수부에 천 단위 콤마 추가
       if (parts[0]) {
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
       }
-      
       // 소수점이 있으면 다시 결합
       const formattedValue = parts.join('.');
-      
       setBudgetValues(prev => ({
         ...prev,
         [itemId]: formattedValue
       }));
-    };
+    }
   };
 
-  const handleCustomNameChange = (itemId) => (e) => {
-    const value = e.target.value;
-    setCustomSpendingItems(prev => 
-      prev.map(item => 
-        item.id === itemId ? { ...item, title: value } : item
-      )
-    );
+  const handleCustomNameChange = (index) => (e) => {
+    const value = e.target.value.trim();
+    // 현재 입력 중인 index를 제외한 기존 커스텀 네임 목록
+    const existingNames = customSpendingItems.map((item, i) => i !== index && item.title.trim()).filter(Boolean);
+    if (existingNames.includes(value)) {
+      alert("이미 존재하는 항목 이름입니다.");
+      return;
+    }
+    setCustomSpendingItems(prev => {
+      const copy = [...prev];
+      copy[index].title = value;
+      return copy;
+    });
   };
 
   const addCustomSpendingItem = () => {
     const newItem = {
-      id: `custom_${Date.now()}`,
-      title: ""
+      title: "",
+      isNew: true,
     };
     setCustomSpendingItems(prev => [...prev, newItem]);
   };
@@ -162,6 +276,30 @@ const BudgetPage = () => {
         inputRefs.current[nextIndex].focus();
       }
     }
+  };
+
+  const removeCustomItem = (index) => {
+    setCustomSpendingItems(prev => prev.filter((_, i) => i !== index));
+
+    setBudgetValues(prev => {
+      const updated = {...prev};
+      delete updated[`CUSTOM_${index}`];
+
+      // CUSTOM index 재정렬
+      const newCustomKeys = {};
+      customSpendingItems.forEach((_, i) => {
+        if (i < index) {
+          newCustomKeys[`CUSTOM_${i}`] = prev[`CUSTOM_${i}`];
+        } else if (i > index) {
+          newCustomKeys[`CUSTOM_${i-1}`] = prev[`CUSTOM_${i}`];
+        }
+      });
+
+      return { 
+        ...updated,
+        ...newCustomKeys 
+      };
+    });
   };
 
   // 백엔드 전송용: 콤마 제거한 순수 숫자값
@@ -177,7 +315,10 @@ const BudgetPage = () => {
     <Wrapper>
       <p className="page">예산안</p>
       <Container>
-        <h2 className="title">기본 파견비 입력</h2>
+        <Title>
+          <h2>기본 파견비 입력</h2>
+          <span className="body1 red" >*</span>
+        </Title>
         <Container1>
           {budgetItems.map((item, index) => (
             <Box1 key={item.id}>
@@ -195,8 +336,15 @@ const BudgetPage = () => {
               />
               <Dropdown 
                 placeholder="화폐" 
-                options={moneyOption}
-                defaultValue="krw"
+                options={currencyDropdownOptions}
+                defaultValue="KRW"
+                value={currencyValues[item.id]}   // GET 이후 값 반영!
+                onSelect={(option) =>
+                  setCurrencyValues((prev) => ({
+                    ...prev,
+                    [item.id]: option.value,
+                  }))
+                }
               />
               <p className="body1">{item.message}</p>
             </Box1>
@@ -249,30 +397,35 @@ const BudgetPage = () => {
               );
             })}
             {customSpendingItems.map((item, index) => {
+              const keyName = `CUSTOM_${index}`;
               const baseIndex = budgetItems.length + 1 + spendingItems.length;
               const nameIndex = baseIndex + index * 2;
               const amountIndex = nameIndex + 1;
+
               return (
-                <Box2 key={item.id}>
-                  <Inputfield 
+                <Box2 key={index}>
+                  <Inputfield
                     ref={(el) => (inputRefs.current[nameIndex] = el)}
-                    customStyle={SpendingInputStyle} 
+                    customStyle={SpendingInputStyle}
                     value={item.title}
-                    onChange={handleCustomNameChange(item.id)}
-                    onKeyDown={handleKeyDown(nameIndex)}
+                    onChange={item.isNew ? handleCustomNameChange(index) : undefined}  // 수정 제어
+                    readOnly={!item.isNew}                                             // 기존 커스텀 readOnly
                     placeholder="항목 입력"
                   />
                   <CostInput>
-                    <Inputfield 
+                    <Inputfield
                       ref={(el) => (inputRefs.current[amountIndex] = el)}
-                      value={budgetValues[item.id] || ""}
-                      onChange={handleBudgetChange(item.id)}
+                      value={budgetValues[keyName] || ""}
+                      onChange={handleBudgetChange(keyName)}
                       onKeyDown={handleKeyDown(amountIndex)}
                       placeholder="금액 입력"
                       customStyle={LivingInputStyle}
                     />
                     <span className="body1">원</span>
                   </CostInput>
+                  <DeleteButton onClick={() => removeCustomItem(index)}>
+                    ✕
+                  </DeleteButton>
                 </Box2>
               );
             })}
@@ -289,7 +442,7 @@ const BudgetPage = () => {
           </clipPath>
         </defs>
       </svg>
-      <SquareButton>
+      <SquareButton onClick={onClick}>
         <span className="h2">저장하기</span>
       </SquareButton>
       <Bottom>
@@ -350,6 +503,24 @@ const Wrapper = styled.div`
         filter: brightness(0.9);
     }
   }
+
+  .red {
+    color: var(--red);
+  }
+`
+
+const Title = styled.div`
+  width: 100%;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin-bottom: 1.4rem;
+
+  gap: 0.3rem;
+
+  text-align: left;
+  color: var(--deep-blue);
 `
 
 const Container = styled.div`
@@ -428,10 +599,6 @@ const TitleBox = styled.div`
   justify-content: space-between;
 
   margin-bottom: 1.1rem;
-
-  .red {
-    color: var(--red);
-  }
 `
 
 const CostInput = styled.div`
@@ -446,6 +613,23 @@ const CostInput = styled.div`
   }
 `
 
+const DeleteButton = styled.button`
+  background: none;
+  border: none;
+  color: var(--red);
+  font-size: 1.2rem;
+  padding: 0 0.5rem;
+  position: absolute;
+  top: 50%;
+  right: -2.2rem;
+  transform: translateY(-50%);
+
+  &:hover {
+    cursor: pointer;
+    filter: brightness(0.9);
+  }
+`;
+
 const Flex = styled.div`
   width: 100%;
   display: flex;
@@ -457,6 +641,7 @@ const Box2 = styled.div`
   width: 100%;
   display: flex;
   gap: 0.8rem;
+  position: relative;
 `
 
 const Bottom = styled.div`
