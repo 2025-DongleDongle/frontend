@@ -52,6 +52,7 @@ function App() {
 
           {/* BackTopbar(뒤로가기) */}
           <Route element={<BackLayout />}>
+            <Route path="/signup" element={<SignupPage />} />
             <Route path="/profile" element={<ProfilePage/>} />
             <Route path="/summaries/profile" element={<AcctSummaryProfileData />} />
           </Route>

@@ -46,6 +46,7 @@ const Feed = ({
   // 항상 최신 is_scraped 값을 반영하도록 상태를 동기화
   const [isScrapped, setIsScrapped] = useState(scrapped);
   const [scrapCount, setScrapCount] = useState(scrap_count);
+  const [isScrapLoading, setIsScrapLoading] = useState(false);
 
   useEffect(() => {
     setIsScrapped(scrapped);
@@ -80,6 +81,8 @@ const Feed = ({
     if (!isLoggedIn) {
       setShowModal(true);
     } else {
+      setIsScrapLoading(true);
+      window.scrapLoading = true;
       try {
         let newScrapCount, newIsScrapped;
         if (!isScrapped) {
@@ -111,6 +114,9 @@ const Feed = ({
         } else {
           alert("스크랩 처리에 실패했습니다.");
         }
+      } finally {
+        setIsScrapLoading(false);
+        window.scrapLoading = false;
       }
     }
   };
