@@ -73,7 +73,7 @@ const NavTopbar = () =>{
                     </Button>
                 </NavContainer>
 
-                <LoginCircleButton></LoginCircleButton>
+                <LoginCircleButton isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
             </Wrapper>
             {showModal && (
                 <Modal

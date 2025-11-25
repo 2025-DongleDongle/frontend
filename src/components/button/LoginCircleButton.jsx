@@ -5,19 +5,8 @@ import { AuthAPI } from "@/apis";
 import Modal from "../Modal";
 
 
-const LoginCircleButton = () => {
+const LoginCircleButton = ({ isLoggedIn, setIsLoggedIn }) => {
     const navigate = useNavigate();
-    const [isLoggedIn, setIsLoggedIn] = useState(() => {
-        // localStorage에 토큰이 있으면 로그인 상태로 초기화
-        return !!localStorage.getItem("token");
-    });
-
-    // 컴포넌트 마운트 시 로그인 상태 확인
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        setIsLoggedIn(!!token);
-    }, []);
-    
     const [showScrapModal, setShowScrapModal] = useState(false);
 
     const onClick = async () => {
