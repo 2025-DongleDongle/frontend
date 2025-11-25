@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useNavigate} from 'react-router-dom';
 import CircleButton from "../button/CircleButton"
 
-const BackTopbar = () =>{
+const BackTopbar = ({ onPublish }) =>{
     const navigate = useNavigate();
 
     return(
@@ -15,7 +15,7 @@ const BackTopbar = () =>{
                     </svg>
                     이전으로
                 </Button>
-                <CircleButton>게시하기</CircleButton>
+                <CircleButton onClick={onPublish}>게시하기</CircleButton>
             </Wrapper>
         </>
     );
