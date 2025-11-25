@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { AuthAPI } from "@/apis";
+import Modal from "../Modal";
 
 
 const LoginCircleButton = () => {
@@ -17,12 +18,16 @@ const LoginCircleButton = () => {
         setIsLoggedIn(!!token);
     }, []);
     
+    const [showScrapModal, setShowScrapModal] = useState(false);
+
     const onClick = async () => {
         if (!isLoggedIn) {
-            // 로그인 상태가 아니면 로그인 페이지로 이동
             navigate('/login');
         } else {
-            // 로그아웃 API 호출
+            if (window.scrapLoading) {
+                setShowScrapModal(true);
+                return;
+            }
             try {
                 await AuthAPI.logout();
                 // 로컬 스토리지에서 토큰 제거
@@ -45,12 +50,24 @@ const LoginCircleButton = () => {
     };
     
     return (
-        <StyledLoginCircleButton
-        onClick={onClick}
-        $isLoggedIn={isLoggedIn}
-        >
-            {isLoggedIn ? "로그아웃" : "로그인"}
-        </StyledLoginCircleButton>
+        <>
+            <StyledLoginCircleButton
+                onClick={onClick}
+                $isLoggedIn={isLoggedIn}
+            >
+                {isLoggedIn ? "로그아웃" : "로그인"}
+            </StyledLoginCircleButton>
+            {showScrapModal && (
+                <Modal
+                    isOpen={showScrapModal}
+                    showCancelButton = {false}
+                    content="스크랩 처리 중입니다."
+                    subtext="잠시만 기다려주세요."
+                    actionText="닫기"
+                    onClose={() => setShowScrapModal(false)}
+                />
+            )}
+        </>
     );
 }
 
