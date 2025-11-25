@@ -403,8 +403,8 @@ const BudgetStatus = styled.p`
     $hasNoBudget
       ? "var(--gray, #a5a5a5)"
       : $isOver
-      ? "var(--red, #ca1111)"
-      : "#22c55e"};
+      ? "var(--black, #000)"
+      : "var(--black, #000)"};
   font-size: 0.57069rem;
   font-weight: 500;
   text-align: center;
