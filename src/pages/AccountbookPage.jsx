@@ -56,17 +56,17 @@ const AccountbookPage = () => {
           const allTransactions = [];
           dateResponse.data.forEach((monthData) => {
             monthData.days?.forEach((dayData) => {
-              dayData.ledgers?.forEach((ledger) => {
+              dayData.items?.forEach((item) => {
                 allTransactions.push({
-                  id: ledger.ledger_id,
-                  entry_type: ledger.entry_type,
-                  date: ledger.date,
-                  payment_method: ledger.payment_method,
-                  category: ledger.category,
-                  amount: parseFloat(ledger.foreign_amount),
-                  currency_code: ledger.foreign_currency,
-                  amount_converted: parseFloat(ledger.krw_amount),
-                  converted_currency_code: ledger.krw_currency,
+                  id: item.id,
+                  entry_type: item.entry_type,
+                  date: item.date,
+                  payment_method: item.payment_method,
+                  category: item.category,
+                  amount: parseFloat(item.amount),
+                  currency_code: item.currency_code,
+                  amount_converted: parseFloat(item.amount_converted),
+                  converted_currency_code: item.converted_currency_code,
                 });
               });
             });
@@ -78,24 +78,7 @@ const AccountbookPage = () => {
         if (categoryResponse.status === "success" && categoryResponse.data) {
           const data = categoryResponse.data;
 
-          // 거래 내역 변환
-          const allTransactions = [];
-          data.categories?.forEach((categoryItem) => {
-            categoryItem.ledgers?.forEach((ledger) => {
-              allTransactions.push({
-                id: ledger.ledger_id,
-                entry_type: ledger.entry_type,
-                date: ledger.date,
-                payment_method: ledger.payment_method,
-                category: ledger.category,
-                amount: parseFloat(ledger.foreign_amount),
-                currency_code: ledger.foreign_currency,
-                amount_converted: parseFloat(ledger.krw_amount),
-                converted_currency_code: ledger.krw_currency,
-              });
-            });
-          });
-          setTransactions(allTransactions);
+          // 카테고리별 조회 시 → 거래내역이 : 개별로는 X, 덩어리(?)로만 O / transactions는 기존 데이터 유지
           if (data.categories) {
             setCategoryData(data.categories);
           }
@@ -111,7 +94,7 @@ const AccountbookPage = () => {
         }
       }
 
-      // 이번달 수입/지출 조회
+      // 이번달
       const thisMonthResponse = await getThisMonthLedgers();
       if (thisMonthResponse.status === "success" && thisMonthResponse.data) {
         const data = thisMonthResponse.data;
@@ -127,7 +110,7 @@ const AccountbookPage = () => {
         });
       }
 
-      // 총기간 수입/지출 조회
+      // 총기간
       const totalMonthResponse = await getTotalMonthLedgers();
       if (totalMonthResponse.status === "success" && totalMonthResponse.data) {
         const data = totalMonthResponse.data;
@@ -150,7 +133,6 @@ const AccountbookPage = () => {
     }
   };
 
-  // 이번달 수입/지출 데이터
   const [monthlyExpense, setMonthlyExpense] = useState({
     foreign_amount: 0,
     foreign_currency: "USD",
@@ -162,7 +144,6 @@ const AccountbookPage = () => {
     krw_amount: 0,
   });
 
-  // 파견기간내 수입/지출 데이터
   const [totalExpense, setTotalExpense] = useState({
     foreign_amount: 0,
     foreign_currency: "USD",
@@ -174,7 +155,6 @@ const AccountbookPage = () => {
     krw_amount: 0,
   });
 
-  // 기본파견비용 데이터
   const [baseDispatchCost, setBaseDispatchCost] = useState({
     airfare: {
       foreign_amount: 0,
@@ -208,12 +188,9 @@ const AccountbookPage = () => {
     },
   });
 
-  // 카테고리
   const [categoryData, setCategoryData] = useState([]);
   const [livingExpense, setLivingExpense] = useState(null);
   const [livingExpenseBudgetDiff, setLivingExpenseBudgetDiff] = useState(null);
-
-  // Daily
   const [dailyData, setDailyData] = useState([]);
 
   const handleMonthPrev = () => {
@@ -236,12 +213,10 @@ const AccountbookPage = () => {
     navigate("/summaries/loading");
   };
 
-  // 모달 열기/닫기 (수정 시에만 사용)
   const handleOpenModal = (transaction) => {
     setEditingTransaction(transaction);
     setIsModalOpen(true);
   };
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingTransaction(null);
@@ -257,7 +232,6 @@ const AccountbookPage = () => {
     try {
       const response = await createLedgerItem(data);
       if (response.status === "success" && response.data) {
-        // 등록 성공 후 데이터 다시 가져오기
         await fetchAllData();
         alert("거래 내역이 등록되었습니다.");
       }
@@ -325,21 +299,21 @@ const AccountbookPage = () => {
             <DateWeekday>{dayData.weekday_ko}</DateWeekday>
           </DateHeader>
           <TransactionItemsWrapper>
-            {dayData.ledgers?.map((ledger) => {
+            {dayData.items?.map((item) => {
               const transaction = {
-                id: ledger.ledger_id,
-                entry_type: ledger.entry_type,
-                date: ledger.date,
-                payment_method: ledger.payment_method,
-                category: ledger.category,
-                amount: parseFloat(ledger.foreign_amount),
-                currency_code: ledger.foreign_currency,
-                amount_converted: parseFloat(ledger.krw_amount),
-                converted_currency_code: ledger.krw_currency,
+                id: item.id,
+                entry_type: item.entry_type,
+                date: item.date,
+                payment_method: item.payment_method,
+                category: item.category,
+                amount: parseFloat(item.amount),
+                currency_code: item.currency_code,
+                amount_converted: parseFloat(item.amount_converted),
+                converted_currency_code: item.converted_currency_code,
               };
               return (
                 <TransactionItem
-                  key={ledger.ledger_id}
+                  key={item.id}
                   transaction={transaction}
                   onClick={() => handleOpenModal(transaction)}
                 />
@@ -658,9 +632,15 @@ const AccountbookPage = () => {
               width: 5.625rem;
               height: 2.484375rem;
               background: ${
-                viewType === "daily" ? "var(--blue, #115bca)" : "var(--white, #ffffff)"
+                viewType === "daily"
+                  ? "var(--blue, #115bca)"
+                  : "var(--white, #ffffff)"
               };
-              color: ${viewType === "daily" ? "var(--white, #ffffff)" : "var(--black, #000)"};
+              color: ${
+                viewType === "daily"
+                  ? "var(--white, #ffffff)"
+                  : "var(--black, #000)"
+              };
               border: ${
                 viewType === "daily"
                   ? "none"
@@ -677,10 +657,14 @@ const AccountbookPage = () => {
               width: 5.625rem;
               height: 2.484375rem;
               background: ${
-                viewType === "category" ? "var(--blue, #115bca)" : "var(--white, #ffffff)"
+                viewType === "category"
+                  ? "var(--blue, #115bca)"
+                  : "var(--white, #ffffff)"
               };
               color: ${
-                viewType === "category" ? "var(--white, #ffffff)" : "var(--black, #000)"
+                viewType === "category"
+                  ? "var(--white, #ffffff)"
+                  : "var(--black, #000)"
               };
               border: ${
                 viewType === "category"
@@ -806,7 +790,11 @@ const AccountbookPage = () => {
               padding: 1.078125rem 1.5rem;
               border-radius: 0.97744rem;
               font-size: 1.125rem;
-              background: ${isSummaryPublished ? "var(--blue, #115bca)" : "var(--gray, #a5a5a5)"};
+              background: ${
+                isSummaryPublished
+                  ? "var(--blue, #115bca)"
+                  : "var(--gray, #a5a5a5)"
+              };
             `}
               >
                 <span className="h3">내 게시글 바로가기</span>
