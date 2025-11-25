@@ -267,8 +267,8 @@ const AccountbookPage = () => {
 
     try {
       const response = await deleteLedgerItem(id);
-      if (response) {
-        // 삭제 성공 후 데이터 다시 가져오기
+      if (response && response.message) {
+        handleCloseModal();
         await fetchAllData();
         handleCloseModal();
       }
