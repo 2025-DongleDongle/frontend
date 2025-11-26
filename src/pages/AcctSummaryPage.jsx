@@ -655,7 +655,7 @@ const CategoryAmount = styled.span`
 
 const CategoryGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
   padding: 0 1rem 1rem 1rem;
   width: 90%;
@@ -726,3 +726,4 @@ const DisplayNote = styled.div`
   font-size: 0.925rem;
   font-weight: 500;
 `;
+  

@@ -145,7 +145,7 @@ const CategoryIcon = ({ category }) => {
   return icons[category] || icons.ETC;
 };
 
-const CategoryCard = ({ categoryData }) => {
+const CategoryCard = ({ categoryData, showBudgetStatus = true }) => {
   const categoryLabel = categoryData.label; //한글레이블 가져오는 거!
 
   const formatAmount = (amount) => {
@@ -184,7 +184,7 @@ const CategoryCard = ({ categoryData }) => {
   const hasNoBudget = budgetMessage === "세부설정예산 없음";
 
   return (
-    <Card>
+    <Card $isOverBudget={isOverBudget}>
       <CardHeader>
         <IconWrapper>
           <CategoryIcon category={categoryData.code} />
@@ -207,7 +207,7 @@ const CategoryCard = ({ categoryData }) => {
             </CurrentAmount>
         </AmountSection>
 
-        {!hideBudgetCompare && (
+        {showBudgetStatus && (
           <BudgetStatus $isOver={isOverBudget} $hasNoBudget={hasNoBudget}>
             {budgetMessage}
           </BudgetStatus>
@@ -233,7 +233,8 @@ const Card = styled.div`
 
   border-radius: 0.625rem;
   border: 1px solid var(--light-gray, #d9d9d9);
-  background: var(--white, #ffffff);
+  background: ${({ $isOverBudget }) =>
+    $isOverBudget ? "#FFF6F5" : "var(--white, #ffffff)"};
 
   transition: all 0.2s;
 `;
@@ -278,6 +279,14 @@ const CardBody = styled.div`
   gap: 0.5rem;
 `;
 
+const CurrentAmount = styled.span`
+  white-space: nowrap;
+  font-size: 0.65625rem;
+  font-weight: 400;
+  color: var(--black, #000);
+  text-align: center;
+`;
+
 const AmountSection = styled.div`
   display: flex;
   flex-direction: column;
@@ -296,13 +305,6 @@ const SecondaryAmount = styled.span`
   color: var(--gray, #a5a5a5);
   font-size: 0.875rem;
   font-weight: 500;
-  text-align: center;
-`;
-
-const CurrentAmount = styled.span`
-  font-size: 0.65625rem;
-  font-weight: 400;
-  color: var(--black, #000);
   text-align: center;
 `;
 
