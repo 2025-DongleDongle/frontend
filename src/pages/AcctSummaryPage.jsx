@@ -7,7 +7,8 @@ import LikeCircleButton from "../components/button/LikeCircleButton";
 import ScrapCircleButton from "../components/button/ScrapCircleButton";
 import { getSnapshot, getLedgerSummary } from "../apis/summaries/snapshot";
 import { useProfile } from "@/hooks";
-import { FeedsAPI } from "@/apis";
+import { FeedsAPI, FeedsActionAPI } from "@/apis";
+import currencySymbolMap from "@/utils/currencySymbolMap";
 
 const AcctSummaryPage = () => {
   const navigate = useNavigate();
@@ -15,6 +16,10 @@ const AcctSummaryPage = () => {
   const { profile } = useProfile();
   const [feedDetail, setFeedDetail] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [liked, setLiked] = useState(false);
+  const [scrapped, setScrapped] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [scrapCount, setScrapCount] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,6 +28,7 @@ const AcctSummaryPage = () => {
 
         const detail = await FeedsAPI.getFeedDetail(id);
         setFeedDetail(detail.data);
+        console.log(detail.data)
 
         const profileResponse = await getSnapshot();
         if (profileResponse && profileResponse.data) {
@@ -43,6 +49,47 @@ const AcctSummaryPage = () => {
 
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    if (feedDetail) {
+      setLiked(feedDetail.liked ?? false);
+      setScrapped(feedDetail.scrapped ?? false);
+      setLikeCount(feedDetail.like_count ?? 0);
+      setScrapCount(feedDetail.scrap_count ?? 0);
+    }
+  }, [feedDetail]);
+
+  const handleToggleLike = async () => {
+    try {
+      // UI 먼저 반영 (optimistic update)
+      setLiked(prev => !prev);
+      setLikeCount(prev => (liked ? prev - 1 : prev + 1));
+
+      if (!liked) await FeedsActionAPI.addFavorite(id);
+      else await FeedsActionAPI.removeFavorite(id);
+    } catch (err) {
+      console.error("좋아요 처리 실패:", err);
+
+      // 실패 시 롤백
+      setLiked(prev => !prev);
+      setLikeCount(prev => (liked ? prev + 1 : prev - 1));
+    }
+  };
+
+  const handleToggleScrap = async () => {
+    try {
+      setScrapped(prev => !prev);
+      setScrapCount(prev => (scrapped ? prev - 1 : prev + 1));
+
+      if (!scrapped) await FeedsActionAPI.addScrap(id);
+      else await FeedsActionAPI.removeScrap(id);
+    } catch (err) {
+      console.error("스크랩 처리 실패:", err);
+
+      setScrapped(prev => !prev);
+      setScrapCount(prev => (scrapped ? prev + 1 : prev - 1));
+    }
+  };
 
   const handleEdit = () => {
     navigate("/summaries/edit");
@@ -82,8 +129,8 @@ const AcctSummaryPage = () => {
   const baseCategories = feedDetail.base_dispatch_summary?.categories || [];
 
   const isOwner = (() => {
-    const profileId = Number(profile?.id);
-    const feedUserId = Number(feedDetail?.user_info?.id);
+    const profileId = profile?.name;
+    const feedUserId = feedDetail?.user_info?.nickname;
 
     // 둘 중 하나라도 없으면 false (로딩 시점 대비)
     if (!profileId || !feedUserId) return false;
@@ -116,6 +163,11 @@ const AcctSummaryPage = () => {
             <ProfileText>
               {feedDetail.user_info?.nickname || "사용자"} / {getGenderText(feedDetail.user_info?.gender)}
             </ProfileText>
+            {isOwner && (
+              <Me>
+                <span className="body3">나</span>
+              </Me>
+            )}
           </ProfileNickname>
           <ProfileWrapper>
             <h3>
@@ -127,8 +179,18 @@ const AcctSummaryPage = () => {
           </ProfileWrapper>
         </ProfileInfo>
         <BtnBox>
-          <LikeCircleButton likeCount={feedDetail.like_count ?? 0} liked={feedDetail.liked ?? false} />
-          <ScrapCircleButton scrapCount={feedDetail.scrap_count ?? 0} scrapped={feedDetail.scrapped ?? false} />
+          <LikeCircleButton 
+            liked={liked}
+            likeCount={likeCount}
+            onToggle={handleToggleLike}
+            disabled={isOwner}
+          />
+          <ScrapCircleButton 
+            scrapped={scrapped}
+            scrapCount={scrapCount}
+            onToggle={handleToggleScrap}
+            disabled={isOwner}
+          />
         </BtnBox>
       </ProfileBox>
 
@@ -228,9 +290,7 @@ const AcctSummaryPage = () => {
               <CategoryLabel>
                 <CategoryText>한달평균생활비</CategoryText>
                 <CategoryAmount>
-                  {feedDetail.living_expense_summary?.foreign_currency === "KRW"
-                    ? "₩"
-                    : feedDetail.living_expense_summary?.foreign_currency || ""}
+                  {currencySymbolMap[feedDetail.living_expense_foreign_currency]}
                   {formatAmount(feedDetail.living_expense_summary?.foreign_amount)}
                   {" "}
                   ({formatKRW(feedDetail.living_expense_summary?.krw_amount)})
@@ -247,9 +307,7 @@ const AcctSummaryPage = () => {
               <BasicCostLabel>
                 <BasicCostText>기본파견비용</BasicCostText>
                 <BasicCostAmount>
-                  {feedDetail.base_dispatch_summary?.foreign_currency === "KRW"
-                    ? "₩"
-                    : feedDetail.base_dispatch_summary?.foreign_currency || ""}
+                  {currencySymbolMap[feedDetail.living_expense_foreign_currency]}
                   {formatAmount(feedDetail.base_dispatch_summary?.foreign_amount)}
                   {" "}
                   ({formatKRW(feedDetail.base_dispatch_summary?.krw_amount)})
@@ -283,8 +341,13 @@ export default AcctSummaryPage;
 
 // 로딩 스피너 중앙 정렬 스타일
 const LoadingWrapper = styled.div`
-  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: var(--white);
@@ -415,13 +478,19 @@ const ProfileText = styled.div`
   gap: 0.19rem;
 `;
 
-const ProfileBadge = styled.div`
-  background: var(--gray, #f4f4f4);
-  color: var(--white, #ffffff);
+const Me = styled.div`
+  width: 1.5rem;
+  height: 1.5rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-left: 0.8rem;
+
   border-radius: 50%;
-  height: 1.1rem;
-  width: 1.1rem;
-  margin-left: 0.5rem;
+  background: var(--gray);
+  color: var(--white);
 `;
 
 const ProfileBox = styled.div`
@@ -473,12 +542,21 @@ const Label = styled.span`
 `;
 
 const DisplayValue = styled.div`
+  height: 2.3rem;
+  width: 19rem;
+
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+
+  padding: 0 1rem;
+
   color: var(--, #000);
   font-size: 0.75rem;
   font-weight: 400;
   border-radius: 0.30706rem;
-  border: 1px solid var(--, #f4f4f4);
-  background: var(--FCFCFC, #fcfcfc);
+  border: 1px solid var(--sub-btn, #f4f4f4);
+  background: var(--text-intput, #fcfcfc);
 `;
 
 const Section1 = styled.section`
@@ -526,6 +604,7 @@ const TitleWrapper = styled.div`
   display: flex;
   align-items: center;
   margin-top: 3.06rem;
+  margin-bottom: 0.88rem;
 `;
 
 const Section2Header = styled.div`
@@ -542,7 +621,7 @@ const EntireGrid = styled.section`
   justify-content: center;
   align-items: center;
 
-  border-radius: 0.625rem;
+  border-radius: 1.07813rem;
   border: 1px solid var(--light-gray);
 
   margin: 0;
@@ -635,9 +714,13 @@ const BasicCostGrid = styled.div`
 
 const DisplayNote = styled.div`
   width: 100%;
+  height: 4.5rem;
+
+  display: flex;
+  align-items: center;
   min-height: 3.55456rem;
   text-align: left;
-  padding: 1rem;
+  padding: 0 3.6rem;
 
   border-radius: 1.177rem;
   border: 1px solid var(--light-gray, #d9d9d9);
