@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import currencySymbolMap from "@/utils/currencySymbolMap";
 
 // 카테고리별 아이콘 컴포넌트
 const CategoryIcon = ({ category }) => {
@@ -231,21 +232,6 @@ const CategoryCard = ({ categoryData }) => {
     });
   };
 
-  // 화폐 기호 매핑
-  const getCurrencySymbol = (code) => {
-    const symbols = {
-      USD: "$",
-      KRW: "₩",
-      EUR: "€",
-      JPY: "¥",
-      GBP: "£",
-      CNY: "¥",
-      CAD: "CA$",
-      TWD: "NT$",
-    };
-    return symbols[code] || code;
-  };
-
   // 예산대비 메시지 (API 명세에 있는대로 썼음)
   const getBudgetMessage = () => {
     if (!categoryData.budget_diff) return "세부설정예산 없음";
@@ -253,7 +239,7 @@ const CategoryCard = ({ categoryData }) => {
     const diff = parseFloat(categoryData.budget_diff.foreign_amount);
     if (diff === 0) return "세부설정예산 없음";
 
-    const symbol = getCurrencySymbol(categoryData.budget_diff.foreign_currency);
+    const symbol = currencySymbolMap[categoryData.budget_diff.foreign_currency];
 
     // API 응답: 양수값이면 덜쓴거, 음수면 더쓴거
     if (diff > 0) {
@@ -283,7 +269,7 @@ const CategoryCard = ({ categoryData }) => {
       <CardBody>
         <AmountSection>
           <PrimaryAmount>
-            {getCurrencySymbol(categoryData.foreign_currency)}
+            {currencySymbolMap[categoryData.foreign_currency]}
             {formatAmount(categoryData.foreign_amount)}
           </PrimaryAmount>
           <SecondaryAmount>
