@@ -50,22 +50,20 @@ function App() {
           {/* UploadTopbar(뒤로가기+게시하기) */}
           <Route element={<UploadLayout />}>
             <Route path="/summaries/loading" element={<AcctSummaryLoading />} />
+            <Route path="/summaries/profile" element={<AcctSummaryProfileData />} />
+            <Route path="/summaries/edit" element={<AcctSummaryProfileEdit />} />
           </Route>
 
           {/* BackTopbar(뒤로가기) */}
           <Route element={<BackLayout />}>
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/profile" element={<ProfilePage/>} />
-            <Route path="/summaries/profile" element={<AcctSummaryProfileData />} />
           </Route>
 
           {/* Topbar X */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup/complete" element={<SignupCompletePage/>}/>
-
-          {/* 가계부 요약본 */}
           <Route path="/summaries/complete" element={<AcctSummaryComplete />} />
-          <Route path="/summaries/edit" element={<AcctSummaryProfileEdit />} />
         </Routes>
       </Router>
     </>
