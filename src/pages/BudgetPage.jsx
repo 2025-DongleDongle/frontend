@@ -8,6 +8,7 @@ import Modal from "../components/Modal";
 import { BudgetAPI } from "@/apis";
 import currencySymbolMap from "@/utils/currencySymbolMap";
 import { currencyDropdownOptions } from "@/utils/currencySymbolMap";
+import { useProfile } from "@/hooks";
 
 const MAX_INT = 2147483647;
 
@@ -61,6 +62,8 @@ const BudgetPage = () => {
 
   const [showModal, setShowModal] = useState(false);
   const [modalMissing, setModalMissing] = useState([]);
+
+  const { profile, setProfile } = useProfile();
 
   useEffect(() => {
     const loadBudget = async () => {
@@ -562,7 +565,7 @@ const BudgetPage = () => {
             </svg>
             <h3>
               <span className="dblue">{totalAverage.country} 교환학생 </span>
-              <span>기준, 1학기 총 지출 비용은 </span>
+              <span>기준, 총 지출 비용은 </span>
               <span className="dblue">최저 약 {Math.floor(totalAverage.min_krw / 10000)}만원({currencySymbolMap[totalAverage.currency] || totalAverage.currency}{totalAverage.min_converted})</span>
               <span>, </span>
               <span className="dblue">최대 약 {Math.floor(totalAverage.max_krw / 10000)}만원({currencySymbolMap[totalAverage.currency] || totalAverage.currency}{totalAverage.max_converted})</span>
@@ -574,7 +577,7 @@ const BudgetPage = () => {
               <path d="M7.28481 14.3132L2.3973 9.42573C2.13394 9.16237 1.77675 9.01442 1.40431 9.01442C1.03186 9.01442 0.674671 9.16237 0.411312 9.42573C0.147953 9.68909 0 10.0463 0 10.4187C0 10.6031 0.0363238 10.7858 0.106897 10.9561C0.17747 11.1265 0.28091 11.2813 0.411312 11.4117L6.29886 17.2993C6.84817 17.8486 7.73553 17.8486 8.28485 17.2993L23.1868 2.3973C23.4502 2.13394 23.5981 1.77675 23.5981 1.40431C23.5981 1.03186 23.4502 0.674671 23.1868 0.411312C22.9235 0.147954 22.5663 0 22.1938 0C21.8214 0 21.4642 0.147954 21.2008 0.411312L7.28481 14.3132Z" fill="#115BCA"/>
             </svg>
             <h3>
-              <span>화연이에연 님의 1학기 미국 캘리포니아 파견 </span>
+              <span>{profile?.name} 님의 {totalAverage.country} 파견 </span>
               <span className="dblue">예상 총 금액은 약 {Math.floor(totalBudgetValue.krw / 10000)}만원({currencySymbolMap[totalAverage.currency] || totalAverage.currency}{totalBudgetValue.converted})</span>
               <span>입니다.</span>
             </h3>
