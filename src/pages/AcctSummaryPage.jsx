@@ -5,7 +5,7 @@ import Spinner from "../components/Spinner";
 import CategoryCard from "../components/CategoryCard";
 import LikeCircleButton from "../components/button/LikeCircleButton";
 import ScrapCircleButton from "../components/button/ScrapCircleButton";
-import { getSnapshot, getLedgerSummary } from "../apis/summaries/snapshot";
+import { getLedgerSummary } from "../apis/summaries/snapshot";
 import { useProfile } from "@/hooks";
 import { FeedsAPI, FeedsActionAPI } from "@/apis";
 import currencySymbolMap from "@/utils/currencySymbolMap";
@@ -15,6 +15,7 @@ const AcctSummaryPage = () => {
   const { id } = useParams();
   const { profile } = useProfile();
   const [feedDetail, setFeedDetail] = useState(null);
+  const [summaryData, setSummaryData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [scrapped, setScrapped] = useState(false);
@@ -29,11 +30,6 @@ const AcctSummaryPage = () => {
         const detail = await FeedsAPI.getFeedDetail(id);
         setFeedDetail(detail.data);
         console.log(detail.data)
-
-        const profileResponse = await getSnapshot();
-        if (profileResponse && profileResponse.data) {
-          setProfileData(profileResponse.data);
-        }
 
         const summaryResponse = await getLedgerSummary();
         if (summaryResponse && summaryResponse.data) {
