@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import Spinner from "../components/Spinner";
-import BackTopbar from "../components/topbar/BackTopbar";
 
 const AcctSummaryLoading = () => {
   const navigate = useNavigate();
@@ -18,7 +17,6 @@ const AcctSummaryLoading = () => {
 
   return (
     <>
-      <BackTopbar />
       <Wrapper>
         <ContentContainer>
           <Spinner />
