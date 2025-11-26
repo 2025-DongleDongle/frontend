@@ -43,11 +43,13 @@ function App() {
             <Route path="/home" element={<HomePage />} />
             <Route path="/scrapbook" element={<ScrapbookPage />} />
             <Route path="/budget" element={<BudgetPage />} />
+            <Route path="/accountbook" element={<AccountbookPage />} />
+            <Route path="/summaries/snapshot/:id" element={<AcctSummaryPage />} />
           </Route>
 
           {/* UploadTopbar(뒤로가기+게시하기) */}
           <Route element={<UploadLayout />}>
-            <Route path="/accountbook" element={<AccountbookPage />} />
+            <Route path="/summaries/loading" element={<AcctSummaryLoading />} />
           </Route>
 
           {/* BackTopbar(뒤로가기) */}
@@ -62,9 +64,7 @@ function App() {
           <Route path="/signup/complete" element={<SignupCompletePage/>}/>
 
           {/* 가계부 요약본 */}
-          <Route path="/summaries/loading" element={<AcctSummaryLoading />} />
           <Route path="/summaries/complete" element={<AcctSummaryComplete />} />
-          <Route path="/summaries/snapshot" element={<AcctSummaryPage />} />
           <Route path="/summaries/edit" element={<AcctSummaryProfileEdit />} />
         </Routes>
       </Router>
