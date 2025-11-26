@@ -27,7 +27,7 @@ const AcctSummaryProfileData = () => {
     try {
       setLoading(true);
       const response = await getLedgerSummary();
-      if (response.status === "success" && response.data) {
+      if (response && response.data) {
         setSummaryData(response.data);
         setCategoryData(response.data.categories || []);
       }
@@ -110,13 +110,20 @@ const AcctSummaryProfileData = () => {
         requestData.summary_note = formData.summary_note;
       }
       const response = await createSnapshot(requestData);
-      if (response.status === "success") {
+      if (response && response.data) {
         // 성공하면? AcctSummaryComplete 페이지로 ㄱㄱ
         navigate("/summaries/complete");
       }
     } catch (error) {
       console.error("Error publishing summary:", error);
-      alert(error.message || "게시 중 오류가 발생했습니다.");
+      if (
+        error.message &&
+        error.message.includes("이미 세부 프로필이 존재합니다")
+      ) {
+        navigate("/summaries/snapshot");
+      } else {
+        alert(error.message || "게시 중 오류가 발생했습니다.");
+      }
     }
   };
 

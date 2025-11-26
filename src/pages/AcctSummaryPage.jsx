@@ -22,12 +22,12 @@ const AcctSummaryPage = () => {
         setLoading(true);
 
         const profileResponse = await getSnapshot();
-        if (profileResponse.status === "success" && profileResponse.data) {
+        if (profileResponse && profileResponse.data) {
           setProfileData(profileResponse.data);
         }
 
         const summaryResponse = await getLedgerSummary();
-        if (summaryResponse.status === "success" && summaryResponse.data) {
+        if (summaryResponse && summaryResponse.data) {
           setSummaryData(summaryResponse.data);
         }
 
