@@ -123,14 +123,11 @@ const BudgetPage = () => {
         });
 
         //생활비 total_amount
-        if (data.living_budget.total_amount === undefined || data.living_budget.total_amount === null) {
-          // 데이터가 없으면 null
-          newBudgetValues["monthlyLiving"] = null;
-        } else if (data.living_budget.total_amount === 0) {
-          // 사용자가 0으로 저장한 경우 0으로 표시
-          newBudgetValues["monthlyLiving"] = "0";
+        if (!data.living_budget.total_amount) {
+          newBudgetValues["monthlyLiving"] = "";
         } else {
-          newBudgetValues["monthlyLiving"] = Number(data.living_budget.total_amount).toLocaleString();
+          newBudgetValues["monthlyLiving"] =
+            Number(data.living_budget.total_amount).toLocaleString();
         }
 
         //생활비 기본 + 커스텀 금액 초기화
@@ -317,12 +314,6 @@ const BudgetPage = () => {
       const numericValue = value.replace(/,/g, '');
       // 숫자로 변환
       const numberVal = Number(numericValue);
-      // // 소수점 앞자리 6자리 이하 체크
-      // const integerPart = numericValue.split('.')[0];
-      // if (integerPart.length > 6) {
-      //   alert("금액의 정수부는 최대 6자리(999,999)까지 입력 가능합니다.");
-      //   return;
-      // }
       // 값이 너무 크면 업데이트 막기
       if (numberVal > MAX_INT) {
         alert("최대 입력 가능 금액은 2,147,483,647원입니다.");
