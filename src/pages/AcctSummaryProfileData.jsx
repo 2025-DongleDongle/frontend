@@ -40,7 +40,7 @@ const AcctSummaryProfileData = () => {
 
   const [formData, setFormData] = useState({
     monthly_spend_in_korea: "",
-    meal_frequency: "", 
+    meal_frequency: "",
     dineout_per_week: "",
     coffee_per_week: "",
     smoking_per_day: "",
@@ -48,7 +48,7 @@ const AcctSummaryProfileData = () => {
     shopping_per_month: "",
     culture_per_month: "",
     residence_type: "",
-    commute: null, // 
+    commute: null, //
     summary_note: "",
   });
 
@@ -463,7 +463,11 @@ const AcctSummaryProfileData = () => {
               </CategoryHeader>
               <CategoryGrid>
                 {categoryData.map((category) => (
-                  <CategoryCard key={category.code} categoryData={category} />
+                  <CategoryCard
+                    key={category.code}
+                    categoryData={category}
+                    showBudgetStatus={false}
+                  />
                 ))}
               </CategoryGrid>
             </CategorySection>
@@ -516,7 +520,11 @@ const AcctSummaryProfileData = () => {
                       budget_diff: null,
                     },
                   ].map((cost) => (
-                    <CategoryCard key={cost.code} categoryData={cost} />
+                    <CategoryCard
+                      key={cost.code}
+                      categoryData={cost}
+                      showBudgetStatus={false}
+                    />
                   ))}
               </BasicCostGrid>
             </BasicCostSection>
@@ -843,7 +851,7 @@ const CategoryAmount = styled.span`
 
 const CategoryGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
   padding: 0 1rem 1rem 1rem;
   width: 90%;
