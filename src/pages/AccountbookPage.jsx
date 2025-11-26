@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "../hooks";
-import NavTopbar from "../components/topbar/NavTopbar";
 import {
   createLedgerItem,
   updateLedgerItem,
@@ -524,7 +523,6 @@ const AccountbookPage = () => {
 
   return (
     <>
-      <NavTopbar />
       <PageContainer>
         <PageTitle>가계부</PageTitle>
         <Wrapper>
