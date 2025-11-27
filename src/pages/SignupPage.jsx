@@ -348,16 +348,16 @@ const SignupPage = () => {
           <ButtonContainer>
             <CircleButton 
               ref={inputRefs[4]}
-              onClick={() => handleGenderSelect("M")}
-              customStyle={gender === "M" ? signupButtonClickedStyle : (genderError ? errorButtonStyle : signupButtonStyle)}
+              onClick={() => handleGenderSelect("남성")}
+              customStyle={gender === "남성" ? signupButtonClickedStyle : (genderError ? errorButtonStyle : signupButtonStyle)}
               onKeyDown={(e) => handleKeyDown(e, 4)}
             >
               남성
             </CircleButton>
             <CircleButton 
               ref={inputRefs[5]}
-              onClick={() => handleGenderSelect("F")}
-              customStyle={gender === "F" ? signupButtonClickedStyle : (genderError ? errorButtonStyle : signupButtonStyle)}
+              onClick={() => handleGenderSelect("여성")}
+              customStyle={gender === "여성" ? signupButtonClickedStyle : (genderError ? errorButtonStyle : signupButtonStyle)}
               onKeyDown={(e) => handleKeyDown(e, 5)}
             >
               여성
