@@ -127,8 +127,8 @@ const SignupPage = () => {
         }
       };
       const res = await SignupAPI.signup(userData);
-      console.log("전송할 데이터:", userData);
-      console.log("API 응답:", res);
+      //console.log("전송할 데이터:", userData);
+      //console.log("API 응답:", res);
       
       // 응답에 에러가 있는지 확인
       if (res.error) {
