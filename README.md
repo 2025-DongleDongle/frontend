@@ -1,11 +1,19 @@
-# ✈️ 돈글돈글
-![돈글돈글 장표-이미지-0](https://github.com/user-attachments/assets/66e94c3c-dc81-4bb0-a42e-ad24042c4f9f)
+# ✈️ 돈글돈글 ✈️
+<img width="2552" height="2552" alt="OHPRINTME Placard_1200x1200_Square pdf - Page 1 of 1" src="https://github.com/user-attachments/assets/e2e74dc1-78ed-4819-b841-b46c5151c1da" />
+
 
 <br>
 
-## 🔗 사이트
-https://dongledongle.vercel.app/
+## 🔗 배포
+https://dongledongle.vercel.app
 
+<br>
+<!--
+### 테스트 계정
+|이름|비밀번호|
+|:------:|:------:|
+  |  |   |
+ -->
 <br>
 
 ## 🛠️ 기술 스택
@@ -19,34 +27,35 @@ https://dongledongle.vercel.app/
 <img src="https://img.shields.io/badge/python-3776AB?style=for-the-badge&logo=python&logoColor=white"> 
 <img src="https://img.shields.io/badge/django-092E20?style=for-the-badge&logo=Django&logoColor=white">
 
+<span>인프라: </span>
+![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
+
 <span>기획·디자인: </span> 
 <img src="https://img.shields.io/badge/figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white">
 
 <br>
-
+<!-- 
 ## 💻 팀원 소개
-신촌경진대회 구교환팀
 |김지후|박서영|김민혜|유진서|설영은|황규리|
 |:------:|:------:|:------:|:------:|:------:|:------:|
 |기획 · 디자인|기획 · 디자인|프론트엔드|프론트엔드|백엔드|백엔드|
-
+-->
 <br>
 
+
 ## 🌟 서비스 소개
-![돈글돈글 장표-이미지-0](https://github.com/user-attachments/assets/66e94c3c-dc81-4bb0-a42e-ad24042c4f9f)
-![돈글돈글 장표-이미지-1](https://github.com/user-attachments/assets/87121220-247c-4e3a-b200-e192effe5116)
-![돈글돈글 장표-이미지-2](https://github.com/user-attachments/assets/bbce508e-d870-4168-b1f3-fcdae14e953e)
-![돈글돈글 장표-이미지-3](https://github.com/user-attachments/assets/30572fe2-6db9-4d9a-815c-43aee2127943)
-![돈글돈글 장표-이미지-4](https://github.com/user-attachments/assets/1f432938-552e-4a64-957a-5300f470d82b)
-![돈글돈글 장표-이미지-5](https://github.com/user-attachments/assets/83aed34c-3495-4b56-9ebc-3fedd6301719)
-![돈글돈글 장표-이미지-6](https://github.com/user-attachments/assets/6d9745dd-f567-4f80-829c-2eb441be04a6)
-![돈글돈글 장표-이미지-7](https://github.com/user-attachments/assets/0552a887-5090-4779-a3cc-a2ce51730142)
-![돈글돈글 장표-이미지-8](https://github.com/user-attachments/assets/64fbd212-bcaa-4f22-bb4d-108e897b817b)
-![돈글돈글 장표-이미지-9](https://github.com/user-attachments/assets/689a88f6-ae60-40d6-b413-b3169fb2e09e)
-![돈글돈글 장표-이미지-10](https://github.com/user-attachments/assets/59d424ac-1f20-4f4c-a558-c719babc4985)
-![돈글돈글 장표-이미지-11](https://github.com/user-attachments/assets/4e56bf31-5a6d-4d51-baf0-ceb925114875)
-
-
+<img width="1926" height="1080" alt="image" src="https://github.com/user-attachments/assets/c7c71c06-151c-41b8-b2f7-2fd5a9986ec5" />
+<img width="1926" height="1080" alt="image" src="https://github.com/user-attachments/assets/fd32e0f4-7e9b-437b-8edd-f5ac7b333e1a" />
+<img width="1926" height="1080" alt="image" src="https://github.com/user-attachments/assets/158a0729-df31-469f-8715-bf8c2a601f5e" />
+<img width="1926" height="1080" alt="image" src="https://github.com/user-attachments/assets/b5fd3722-1f0e-4b41-b85e-690745b53908" />
+<img width="1926" height="1080" alt="image" src="https://github.com/user-attachments/assets/ca6c4a85-7148-4f43-b354-4390d515f327" />
+<img width="1926" height="1080" alt="image" src="https://github.com/user-attachments/assets/0cba6bd4-2419-4125-a7c8-8fad3cea267e" />
+<img width="1926" height="1080" alt="image" src="https://github.com/user-attachments/assets/bd61d07b-ca0c-4f51-a1ed-2a424c623478" />
+<img width="1926" height="1080" alt="image" src="https://github.com/user-attachments/assets/7972771f-a54f-4d0e-a578-15e68c02229c" />
+<img width="1926" height="1080" alt="image" src="https://github.com/user-attachments/assets/b52d1eee-e99d-44f0-a5b7-9449f7d691bb" />
+<img width="1926" height="1080" alt="image" src="https://github.com/user-attachments/assets/daeb98d5-7e66-4b06-94d8-411e8488c235" />
+<img width="1926" height="1080" alt="image" src="https://github.com/user-attachments/assets/78ea7c78-f18f-4cda-8bf3-61aca7f0e31d" />
 
 
 
