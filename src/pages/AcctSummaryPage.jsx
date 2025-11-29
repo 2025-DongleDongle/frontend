@@ -295,11 +295,7 @@ const AcctSummaryPage = () => {
         found?.foreign_currency ?? feedDetail.living_expense_foreign_currency,
       krw_amount: found?.krw_amount ?? "0",
       krw_currency: found?.krw_currency ?? "KRW",
-      budget_diff: found?.budget_diff ?? {
-        foreign_amount: "0.00",
-        foreign_currency:
-          found?.foreign_currency ?? feedDetail.living_expense_foreign_currency,
-      },
+      current_rate_krw_amount: found?.current_rate_krw_amount ?? "0",
     };
   });
 
