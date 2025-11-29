@@ -89,7 +89,7 @@ const CategoryIcon = ({ category }) => {
         />
       </svg>
     ),
-    airfare: (
+    FLIGHT: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="16"
@@ -246,7 +246,7 @@ const CategoryCard = ({
           </SecondaryAmount>
           {!showBudgetStatus && (
             <BudgetStatus $isOver={false} $hasNoBudget={false}>
-              ₩{formatAmount(categoryData.current_rate_krw_amount ?? 0)}
+              현재 환율 기준: ₩{formatAmount(categoryData.current_rate_krw_amount ?? 0)}
             </BudgetStatus>
           )}
         </AmountSection>
